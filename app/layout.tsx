@@ -18,8 +18,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className + " flex h-screen flex-col"}>
         <header>
-          <div className="flex h-20 w-full flex-col justify-end bg-slate-300">
-            <div className="flex-start flex gap-3 p-3">
+          <div className="flex w-full bg-slate-300 p-2">
+            <div className="flex w-full items-center justify-end gap-3 p-3">
               <Link
                 className="text-slate-700 hover:cursor-pointer hover:text-slate-600"
                 href={"/sales"}>

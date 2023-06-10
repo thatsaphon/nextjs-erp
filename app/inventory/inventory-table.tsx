@@ -53,21 +53,15 @@ const columns = [
     cell: (info) => info.getValue(),
     header: "ชื่อสินค้า",
   }),
-  //   columnHelper.group({
-  //     header: "หน่วย",
-  //     columns:[
-
-  //     ]
-  //   }),
   columnHelper.accessor(
     (row) => (row.unit ? `${row.unit}(${row.quantity})` : ""),
     {
-      cell: (info) => info.getValue(),
+      cell: (info) => <div className="mr-2 text-right">{info.getValue()}</div>,
       header: "หน่วย",
     }
   ),
   columnHelper.accessor((row) => (row.unit ? `${row.price}` : ""), {
-    cell: (info) => info.getValue(),
+    cell: (info) => <div className="mr-2 text-right">{info.getValue()}</div>,
     header: "ราคา",
   }),
   columnHelper.accessor("code", {
@@ -82,10 +76,13 @@ const columns = [
   }),
 ];
 
-type Props = { inventory: Partial<Inventory> & { prices: Price[] }[] };
+type Props = {
+  inventory: Partial<Inventory> & { prices: Price[] }[];
+};
 
 export default function InventoryTable({ inventory }: Props) {
   const [expanded, setExpanded] = React.useState<ExpandedState>({});
+  console.log(expanded);
   const table = useReactTable({
     data: inventory,
     columns,
@@ -123,7 +120,6 @@ export default function InventoryTable({ inventory }: Props) {
         <tbody>
           {table.getRowModel().rows.map((row, i) => (
             <tr key={row.id} className="border-b-2 border-b-slate-300">
-              {console.log(row.getVisibleCells())}
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}

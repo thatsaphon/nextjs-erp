@@ -13,6 +13,7 @@ export default async function InventoryList({}: Props) {
       prices: {},
     },
   });
+
   return (
     <>
       <div className="p-4">

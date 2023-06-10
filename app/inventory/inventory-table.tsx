@@ -49,7 +49,7 @@ const columns = [
     ),
     header: "รหัสสินค้า",
   }),
-  columnHelper.accessor("code", {
+  columnHelper.accessor("name", {
     cell: (info) => info.getValue(),
     header: "ชื่อสินค้า",
   }),
@@ -123,6 +123,7 @@ export default function InventoryTable({ inventory }: Props) {
         <tbody>
           {table.getRowModel().rows.map((row, i) => (
             <tr key={row.id} className="border-b-2 border-b-slate-300">
+              {console.log(row.getVisibleCells())}
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}

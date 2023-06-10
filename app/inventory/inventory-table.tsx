@@ -49,7 +49,7 @@ const columns = [
     ),
     header: "รหัสสินค้า",
   }),
-  columnHelper.accessor("name", {
+  columnHelper.accessor("code", {
     cell: (info) => info.getValue(),
     header: "ชื่อสินค้า",
   }),
@@ -71,6 +71,8 @@ const columns = [
     header: "ราคา",
   }),
   columnHelper.accessor("code", {
+    header: "",
+    id: "link",
     cell: (info) =>
       info.getValue() ? (
         <Link href={`./inventory/${info.getValue()}`}>Edit</Link>
@@ -119,7 +121,7 @@ export default function InventoryTable({ inventory }: Props) {
           ))}
         </thead>
         <tbody>
-          {table.getRowModel().rows.map((row) => (
+          {table.getRowModel().rows.map((row, i) => (
             <tr key={row.id} className="border-b-2 border-b-slate-300">
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id}>

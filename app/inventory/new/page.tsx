@@ -15,7 +15,7 @@ export default function NewInventory({}: Props) {
   return (
     <>
       <div className="mx-auto mt-4 flex w-full max-w-6xl justify-end">
-        <Link href={"/sales"}>
+        <Link href={"/inventory"}>
           {`<`} ย้อนกลับ
           {/* <button type="button" className="rounded-md bg-slate-700 p-2 text-slate-100">
       </button> */}

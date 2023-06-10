@@ -1,7 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
 export async function createInventory(formData: FormData) {
@@ -14,7 +12,10 @@ export async function createInventory(formData: FormData) {
   let i = 0;
   while (1) {
     let [barcode, quantity, unit, price] = formData.getAll(`prices[${i}]`);
-    console.log([barcode, quantity, unit, price]);
+    if (i === 0) {
+      [quantity, unit, price] = formData.getAll(`prices[${i}]`);
+      barcode = code;
+    }
     if (barcode === "" && quantity === "" && unit === "" && price === "")
       throw new Error(`ใส่ราคาช่องที่ ${i + 1} ไม่ครบ`);
     if (!(barcode || quantity || unit || price)) break;
@@ -32,7 +33,7 @@ export async function createInventory(formData: FormData) {
     i++;
   }
 
-  await prisma.inventory.create({
+  return await prisma.inventory.create({
     data: {
       code: code.toString(),
       name: name.toString(),
@@ -45,6 +46,4 @@ export async function createInventory(formData: FormData) {
       },
     },
   });
-
-  redirect("/inventory");
 }

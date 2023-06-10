@@ -2,12 +2,14 @@
 import Link from "next/link";
 import React, { useState, useTransition } from "react";
 import { createInventory } from "./action";
+import { useRouter } from "next/navigation";
 
 type Props = {};
 
 export default function NewInventory({}: Props) {
+  const router = useRouter();
   let [isPending, startTransition] = useTransition();
-  const [priceCount, setPriceCount] = useState(2);
+  const [priceCount, setPriceCount] = useState(0);
   const deleteItem = () => {
     setPriceCount((prev) => prev - 1);
   };
@@ -25,8 +27,9 @@ export default function NewInventory({}: Props) {
         <form
           className="flex h-full flex-col justify-between"
           action={(data) => {
-            startTransition(() => {
-              createInventory(data);
+            startTransition(async () => {
+              const res = await createInventory(data);
+              router.push(`/inventory/${res.code}`);
             });
           }}>
           <div className="mb-2 flex w-full flex-col items-end justify-between gap-2 lg:flex-row">
@@ -62,10 +65,11 @@ export default function NewInventory({}: Props) {
               </label>
               <input
                 type="text"
+                disabled
                 id="barcode"
-                className="h-12 w-full flex-1 appearance-none rounded-lg border border-gray-300 border-transparent bg-white px-4 py-2 text-base text-gray-700 placeholder-gray-400 shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-purple-600"
+                className="h-12 w-full flex-1 appearance-none rounded-lg border border-gray-300 border-transparent bg-white px-4 py-2 text-base text-gray-700 placeholder-gray-400 shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-purple-600 disabled:bg-gray-300"
                 name="prices[0]"
-                placeholder="รหัสขาย"
+                placeholder="Default Value"
               />
             </div>
             <div className="relative flex-1">

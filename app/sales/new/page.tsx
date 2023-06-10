@@ -6,14 +6,14 @@ type Props = {};
 export default function NewSalesPage({}: Props) {
   return (
     <>
-      <div className="ml-4 mt-4">
+      <div className="mx-auto mt-4 flex w-full max-w-6xl justify-end">
         <Link href={"/sales"}>
-          <button className="rounded-md bg-slate-700 p-2 text-slate-100">
-            ย้อนกลับ
-          </button>
+          {`<`} ย้อนกลับ
+          {/* <button className="rounded-md bg-slate-700 p-2 text-slate-100">
+          </button> */}
         </Link>
       </div>
-      <div className="m-2 mx-auto h-full w-full max-w-4xl rounded-lg bg-slate-200 p-3">
+      <div className="m-2 mx-auto min-h-[500px] w-full max-w-4xl rounded-lg bg-slate-200 p-3">
         <form className="flex h-full flex-col justify-between" action="">
           <div className="flex w-full flex-col justify-between gap-2 lg:flex-row">
             <div className="relative flex-1">

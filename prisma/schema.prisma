@@ -1,0 +1,180 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// npx prisma db push
+// npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl         = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  shadowDatabaseUrl = env("POSTGRES_URL_NON_POOLING") // used for migrations
+}
+
+model Inventory {
+  id               Int               @id @default(autoincrement())
+  code             String            @unique
+  name             String            @unique
+  prices           Price[]
+  costs            Cost[]
+  transactionItems TransactionItem[]
+  categories       ProductCategory[]
+  images           Image[]
+  remark           String?
+  price            Float             @default(0)
+  quantity         Float             @default(0)
+  createdDate      DateTime
+  updatedDate      DateTime
+}
+
+model ProductCategory {
+  id           String      @id @default(cuid())
+  name         String      @unique
+  inventoryIds Inventory[]
+}
+
+model Price {
+  id          String    @id @default(cuid())
+  inventory   Inventory @relation(fields: [inventoryId], references: [id])
+  inventoryId Int
+  barcode     String    @unique
+  quantity    Float
+  unit        String
+  price       Float
+  createdDate DateTime
+  updatedDate DateTime
+
+  @@index([inventoryId])
+}
+
+model Cost {
+  id             String    @id @default(cuid())
+  inventory      Inventory @relation(fields: [inventoryId], references: [id])
+  inventoryId    Int
+  date           DateTime
+  quantity       Float
+  pricePerUnit   Float
+  totalPrice     Float
+  latestQuantity Float
+  latestCost     Float
+  createdDate    DateTime
+  updatedDate    DateTime
+
+  @@index([inventoryId])
+}
+
+model Transaction {
+  id               String            @id @default(cuid())
+  date             DateTime
+  documentNumber   String            @unique
+  transactionItems TransactionItem[]
+  type             TransactionType
+  images           Image[]
+  remark           String
+}
+
+enum TransactionType {
+  GoodsPurchase
+  CashSales
+  CreditSales
+  Received
+  Paid
+  Expense
+}
+
+model TransactionItem {
+  id                    String              @id @default(cuid())
+  transactionId         String
+  transaction           Transaction         @relation(fields: [transactionId], references: [id])
+  type                  TransactionItemType
+  inventoryId           Int?
+  inventory             Inventory?          @relation(fields: [inventoryId], references: [id])
+  inventoryBarcode      String?
+  inventoryUnit         String?
+  inventoryUnitQuantity Float?
+  inventoryPricePerUnit Float?
+  accountPayableId      Int?
+  accountPayable        AccountPayable?     @relation(fields: [accountPayableId], references: [id])
+  accountReceivableId   Int?
+  accountReceivable     AccountReceivable?  @relation(fields: [accountReceivableId], references: [id])
+  cashId                Int?
+  cash                  Cash?               @relation(fields: [cashId], references: [id])
+  quantity              Float?
+  debitAmount           Float
+  creditAmount          Float
+
+  @@index([inventoryId])
+  @@index([transactionId])
+  @@index([accountPayableId])
+  @@index([accountReceivableId])
+  @@index([cashId])
+}
+
+model AccountPayable {
+  id           Int               @id @default(autoincrement())
+  transactions TransactionItem[]
+  images       Image[]
+  name         String
+  address      String?
+  phone        String?
+  taxId        String?
+  remark       String?
+  createdDate  DateTime
+  updatedDate  DateTime
+}
+
+model AccountReceivable {
+  id           Int               @id @default(autoincrement())
+  transactions TransactionItem[]
+  images       Image[]
+  name         String
+  address      String?
+  phone        String?
+  taxId        String?
+  remark       String?
+  createdDate  DateTime
+  updatedDate  DateTime
+}
+
+model Cash {
+  id           Int               @id @default(autoincrement())
+  transactions TransactionItem[]
+  images       Image[]
+  name         String
+  accountId    String
+  createdDate  DateTime
+  updatedDate  DateTime
+}
+
+enum TransactionItemType {
+  Inventory
+  AP
+  AR
+  Cash
+}
+
+model Image {
+  id            String             @id @default(cuid())
+  inventoryId   Int?
+  inventory     Inventory?         @relation(fields: [inventoryId], references: [id])
+  transactionId String?
+  transaction   Transaction?       @relation(fields: [transactionId], references: [id])
+  cashId        Int?
+  cash          Cash?              @relation(fields: [cashId], references: [id])
+  arId          Int?
+  ar            AccountReceivable? @relation(fields: [arId], references: [id])
+  apId          Int?
+  ap            AccountPayable?    @relation(fields: [apId], references: [id])
+  imageUrl      String
+  createdDate   DateTime
+  updatedDate   DateTime
+
+  @@index([inventoryId])
+  @@index([transactionId])
+  @@index([cashId])
+  @@index([arId])
+  @@index([apId])
+}

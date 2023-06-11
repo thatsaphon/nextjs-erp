@@ -63,7 +63,7 @@ export async function updateInventory(formData: FormData, updatedCode: string) {
   //     },
   //   },
   // });
-  revalidatePath(`./inventory/${updatedCode}`);
+  revalidatePath(`/inventory/${updatedCode}`);
   revalidatePath("/inventory");
   redirect(`/inventory`);
 }

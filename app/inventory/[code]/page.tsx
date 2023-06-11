@@ -3,14 +3,11 @@ import React from "react";
 import InventoryFormComponent from "../inventory-form";
 import { prisma } from "@/lib/prisma";
 import { updateInventory } from "./action";
-import { revalidatePath } from "next/cache";
-// import { createInventory } from "../new/action";
 
 type Props = { params: { code: string } };
 
 export const revalidate = 3600;
 export default async function InventoryDetailPage({ params }: Props) {
-  //   console.log(params);
   const inventory = await prisma.inventory.findFirst({
     where: { code: params.code },
     include: { prices: {} },

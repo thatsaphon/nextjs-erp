@@ -22,8 +22,6 @@ export default function InventoryFormComponent({ submit, inventory }: Props) {
   const otherPrices = inventory?.prices.filter(
     ({ barcode }) => inventory.code !== barcode
   );
-  console.log(otherPrices);
-  console.log(priceCount);
 
   return (
     <form

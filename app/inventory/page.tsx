@@ -1,7 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Inventory, Price } from "@prisma/client";
 import Link from "next/link";
-import { getInventories } from "./action";
 import InventoryTable from "./inventory-table";
 
 type Props = {};

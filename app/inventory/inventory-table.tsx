@@ -3,7 +3,6 @@
 
 import { Inventory, Price } from "@prisma/client";
 import {
-  ColumnDef,
   ExpandedState,
   createColumnHelper,
   flexRender,
@@ -12,7 +11,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import Link from "next/link";
-import React, { useState } from "react";
+import React from "react";
 
 const columnHelper = createColumnHelper<
   Partial<Inventory> & { prices?: Price[] } & Partial<Price>
@@ -24,10 +23,6 @@ const columns = [
     cell: ({ row, getValue }) => (
       <div
         style={{
-          // Since rows are flattened by default,
-          // we can use the row.depth property
-          // and paddingLeft to visually indicate the depth
-          // of the row
           paddingLeft: `${row.depth * 2}rem`,
         }}>
         <>

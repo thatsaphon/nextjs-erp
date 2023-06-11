@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 
 type Props = { params: { code: string } };
 
+export const revalidate = 3600;
 export default async function InventoryDetailPage({ params }: Props) {
   //   console.log(params);
   const inventory = await prisma.inventory.findFirst({
@@ -32,9 +33,6 @@ export default async function InventoryDetailPage({ params }: Props) {
           submit={async (data) => {
             "use server";
             const res = await updateInventory(data, params.code);
-            revalidatePath("./");
-            revalidatePath("/inventory");
-            //   router.push(`/inventory/${res.code}`);
           }}
         />
       </div>

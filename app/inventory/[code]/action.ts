@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export async function updateInventory(formData: FormData, updatedCode: string) {
@@ -62,5 +63,7 @@ export async function updateInventory(formData: FormData, updatedCode: string) {
   //     },
   //   },
   // });
+  revalidatePath(`./inventory/${updatedCode}`);
+  revalidatePath("/inventory");
   redirect(`/inventory`);
 }

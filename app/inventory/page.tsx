@@ -12,6 +12,7 @@ export default async function InventoryList({}: Props) {
     include: {
       prices: {},
     },
+    orderBy: { updatedDate: "desc" },
   });
 
   return (

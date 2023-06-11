@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 
 import { Inventory, Price } from "@prisma/client";
@@ -56,20 +57,24 @@ const columns = [
   columnHelper.accessor(
     (row) => (row.unit ? `${row.unit}(${row.quantity})` : ""),
     {
-      cell: (info) => <div className="mr-2 text-right">{info.getValue()}</div>,
-      header: "หน่วย",
+      id: "unit",
+      header: () => <div className="text-right">หน่วย</div>,
+      cell: (info) => <div className="text-right">{info.getValue()}</div>,
     }
   ),
   columnHelper.accessor((row) => (row.unit ? `${row.price}` : ""), {
-    cell: (info) => <div className="mr-2 text-right">{info.getValue()}</div>,
-    header: "ราคา",
+    id: "price",
+    cell: (info) => <div className="text-right">{info.getValue()}</div>,
+    header: () => <div className="text-right">ราคา</div>,
   }),
   columnHelper.accessor("code", {
     header: "",
     id: "link",
     cell: (info) =>
       info.getValue() ? (
-        <Link href={`./inventory/${info.getValue()}`}>Edit</Link>
+        <div className="text-right">
+          <Link href={`./inventory/${info.getValue()}`}>Edit</Link>
+        </div>
       ) : (
         <></>
       ),
@@ -82,7 +87,6 @@ type Props = {
 
 export default function InventoryTable({ inventory }: Props) {
   const [expanded, setExpanded] = React.useState<ExpandedState>({});
-  console.log(expanded);
   const table = useReactTable({
     data: inventory,
     columns,

@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
-export async function createInventory(formData: FormData) {
+export async function updateInventory(formData: FormData, updatedCode: string) {
   let code = formData.get("code");
   if (!code) throw new Error("no code");
   let name = formData.get("name");
@@ -34,18 +34,33 @@ export async function createInventory(formData: FormData) {
     i++;
   }
 
-  const result = await prisma.inventory.create({
+  await prisma.inventory.update({
+    where: { code: updatedCode },
     data: {
       code: code.toString(),
       name: name.toString(),
-      createdDate: new Date(),
       updatedDate: new Date(),
       prices: {
+        deleteMany: {},
         createMany: {
           data: prices,
         },
       },
     },
   });
+
+  // const result = await prisma.inventory.create({
+  //   data: {
+  //     code: code.toString(),
+  //     name: name.toString(),
+  //     createdDate: new Date(),
+  //     updatedDate: new Date(),
+  //     prices: {
+  //       createMany: {
+  //         data: prices,
+  //       },
+  //     },
+  //   },
+  // });
   redirect(`/inventory`);
 }

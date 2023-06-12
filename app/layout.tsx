@@ -27,6 +27,11 @@ export default function RootLayout({
               </Link>
               <Link
                 className="text-slate-700 hover:cursor-pointer hover:text-slate-600"
+                href={"/account-receivable"}>
+                ลูกค้า
+              </Link>
+              <Link
+                className="text-slate-700 hover:cursor-pointer hover:text-slate-600"
                 href={"/purchase"}>
                 งานรับสินค้า
               </Link>

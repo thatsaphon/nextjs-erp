@@ -18,7 +18,7 @@ export default async function NewSalesPage({}: Props) {
         </Link>
       </div>
       <div className="m-2 mx-auto min-h-[500px] w-full max-w-4xl rounded-lg bg-slate-200 p-3">
-        <SalesFormComponent ars={ars}></SalesFormComponent>
+        <SalesFormComponent ars={ars} sales={[]}></SalesFormComponent>
       </div>
     </>
   );

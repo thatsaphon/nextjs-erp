@@ -1,17 +1,160 @@
 "use client";
 
-import { AccountReceivable } from "@prisma/client";
+import {
+  AccountReceivable,
+  Inventory,
+  Price,
+  TransactionItem,
+} from "@prisma/client";
+import {
+  ColumnDef,
+  ExpandedState,
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getExpandedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import dayjs from "dayjs";
-import Link from "next/link";
-import React, { useState, KeyboardEvent } from "react";
+import React, { useState, KeyboardEvent, useEffect } from "react";
+import { searchInventories } from "./action";
+import InventorySearchInputComponent from "./inventory-search-input";
 
-type Props = { ars: AccountReceivable[] };
+const columnHelper = createColumnHelper<
+  Partial<TransactionItem> & { inventory?: Inventory & { prices?: Price[] } }
+>();
 
-export default function SalesFormComponent({ ars }: Props) {
-  const [searchBox, setSearchBox] = useState("");
+type Props = {
+  ars: AccountReceivable[];
+  sales: Partial<
+    TransactionItem & { inventory?: Inventory & { prices?: Price[] } }
+  >[];
+};
+
+export default function SalesFormComponent({ ars, sales }: Props) {
   const [selectedAr, setSelectedAr] = useState<AccountReceivable | null>();
+  const [searchResult, setSearchResult] = useState<
+    (Inventory & { prices?: Price[] })[]
+  >([]);
+  const [tableState, setTableState] = useState<
+    Partial<
+      TransactionItem & { inventory?: Inventory & { prices?: Price[] } }
+    >[]
+  >([...sales]);
 
-  function keyDown(e: KeyboardEvent<HTMLButtonElement>, total: number) {
+  const columns = [
+    columnHelper.accessor((item) => item.inventory?.code, {
+      cell: (info) => info.getValue(),
+      id: "inventoryCode",
+      header: () => <div className="text-left">รหัสสินค้า</div>,
+    }),
+    columnHelper.accessor((item) => item.inventory?.name, {
+      cell: (info) => info.getValue(),
+      id: "inventoryName",
+      header: () => <div className="text-left">ชื่อสินค้า</div>,
+    }),
+    columnHelper.accessor((item) => item, {
+      cell: (info) => (
+        <select defaultValue={info.getValue().inventoryUnit || ""}>
+          {info.getValue().inventory?.prices?.map((price, i) => (
+            <option
+              key={i}
+              id={`${info.getValue().inventory?.code}-price-${i}`}
+              value={price.unit}>
+              {`${price.unit} (${price.quantity})`}
+            </option>
+          ))}
+        </select>
+      ),
+      id: "inventoryUnit",
+      header: () => <div className="text-left">หน่วย</div>,
+    }),
+    columnHelper.accessor("inventoryUnitQuantity", {
+      cell: (info) => {
+        const initialValue = info.getValue();
+        const [value, setValue] = React.useState<number>(initialValue || 0);
+        React.useEffect(() => {
+          setValue(initialValue || 0);
+        }, [initialValue]);
+
+        return (
+          <input
+            type="number"
+            value={value}
+            onChange={(e) => setValue(+e.target.value)}
+            onBlur={(e) => {
+              info.table.options.meta?.updateData(
+                info.row.index,
+                info.column.id,
+                e.target.value
+              );
+            }}
+          />
+        );
+      },
+      header: () => <div className="text-left">จำนวน</div>,
+    }),
+    columnHelper.accessor("inventoryPricePerUnit", {
+      cell: (info) => {
+        const initialValue = info.getValue();
+        const [value, setValue] = React.useState<number>(initialValue || 0);
+        React.useEffect(() => {
+          setValue(initialValue || 0);
+        }, [initialValue]);
+
+        return (
+          <input
+            type="number"
+            value={value}
+            onChange={(e) => setValue(+e.target.value)}
+            onBlur={(e) => {
+              info.table.options.meta?.updateData(
+                info.row.index,
+                info.column.id,
+                e.target.value
+              );
+            }}
+          />
+        );
+      },
+      header: () => <div className="text-left">ราคา</div>,
+    }),
+    columnHelper.accessor((item) => item.debitAmount || item.creditAmount, {
+      cell: (info) => info.getValue(),
+      id: "total",
+      header: () => <div className="text-left">รวม</div>,
+    }),
+  ];
+
+  // const [expanded, setExpanded] = React.useState<ExpandedState>({});
+  const table = useReactTable({
+    data: tableState,
+    columns,
+    meta: {
+      updateData: (rowIndex: number, columnId: number, value: unknown) => {
+        // Skip page index reset until after next rerender
+        setTableState((old) =>
+          old.map((row, index) => {
+            if (index === rowIndex) {
+              return {
+                ...old[rowIndex]!,
+                [columnId]: value,
+              };
+            }
+            return row;
+          })
+        );
+      },
+    },
+    state: {
+      // expanded,
+    },
+    getCoreRowModel: getCoreRowModel(),
+    // getExpandedRowModel: getExpandedRowModel(),
+    // onExpandedChange: setExpanded,
+  });
+
+  function handleArKeyDown(e: KeyboardEvent<HTMLButtonElement>, total: number) {
     if (e.code === "ArrowUp" && e.target instanceof Element) {
       if (e.target.id === "ar-0") return;
       document.getElementById(`ar-${+e.target.id.split("-")[1] + -1}`)?.focus();
@@ -20,6 +163,77 @@ export default function SalesFormComponent({ ars }: Props) {
       if (e.target.id === `ar-${total - 1}`) return;
       document.getElementById(`ar-${+e.target.id.split("-")[1] + 1}`)?.focus();
     }
+  }
+
+  async function handleNewItemKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (
+      (e.code === "ArrowDown" ||
+        e.code === "Enter" ||
+        e.code === "NumpadEnter") &&
+      e.target instanceof Element
+    ) {
+      e.preventDefault();
+      const inventories = await searchInventories(e.target.value);
+      setSearchResult(inventories);
+      setTimeout(() => {
+        document.getElementById(`search-0`)?.focus();
+      }, 100);
+    }
+  }
+
+  function handleClickSearchResult(
+    inventory: Inventory & {
+      prices?: Price[];
+    }
+  ) {
+    pushNew(inventory);
+  }
+
+  async function handleSearchResultKeyDown(
+    e: KeyboardEvent<HTMLButtonElement>,
+    total: number,
+    inventory: Inventory & { prices?: Price[] }
+  ) {
+    if (e.code === "Enter" || e.code === "Tab") {
+      e.preventDefault();
+      pushNew(inventory);
+    }
+
+    if (e.code === "ArrowUp" && e.target instanceof Element) {
+      if (e.target.id === "search-0") return;
+      document
+        .getElementById(`search-${+e.target.id.split("-")[1] + -1}`)
+        ?.focus();
+    }
+    if (e.code === "ArrowDown" && e.target instanceof Element) {
+      if (e.target.id === `search-${total - 1}`) return;
+      document
+        .getElementById(`search-${+e.target.id.split("-")[1] + 1}`)
+        ?.focus();
+    }
+  }
+  function pushNew(
+    inventory: Inventory & {
+      prices?: Price[];
+    }
+  ) {
+    setTableState((prev) => {
+      const newSales = [...prev];
+      newSales.push({
+        inventory,
+        inventoryUnitQuantity: 1,
+        inventoryPricePerUnit:
+          inventory.prices && inventory.prices.length
+            ? inventory.prices[0].price
+            : 0,
+        debitAmount:
+          inventory.prices && inventory.prices.length
+            ? inventory.prices[0].price
+            : 0,
+      });
+      return newSales;
+    });
+    setSearchResult([]);
   }
 
   return (
@@ -40,14 +254,14 @@ export default function SalesFormComponent({ ars }: Props) {
               />
             )}
             {!selectedAr && (
-              <div className="absolute min-h-[200px] w-full overflow-scroll bg-white">
+              <div className="absolute z-10 min-h-[200px] w-full overflow-scroll bg-white">
                 {ars.map((ar, i) => (
                   <button
                     key={i}
                     id={`ar-${i}`}
                     onClick={() => setSelectedAr(ar)}
                     type="button"
-                    onKeyDown={(e) => keyDown(e, ars.length)}
+                    onKeyDown={(e) => handleArKeyDown(e, ars.length)}
                     className="w-full p-2 text-left hover:bg-slate-200 focus:bg-slate-200 focus:outline-none">
                     {ar.name}
                   </button>
@@ -69,9 +283,6 @@ export default function SalesFormComponent({ ars }: Props) {
             <label htmlFor="date" className="text-gray-700">
               วันที่
             </label>
-            {/* {console.log(
-              new Date(new Date().getTime() + 420 * 60000).toISOString().slice(0,10)
-            )} */}
             <input
               type="date"
               id="date"
@@ -84,6 +295,79 @@ export default function SalesFormComponent({ ars }: Props) {
         </div>
         <div className="mt-2 flex w-full flex-1 justify-between gap-2">
           <div className="flex-1 rounded-md bg-white"></div>
+        </div>
+
+        <div className="flex w-full flex-col justify-between gap-2 bg-white lg:flex-row">
+          <div className="relative flex-1 ">
+            {true && (
+              <table className="w-full">
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr key={headerGroup.id} className="">
+                      {headerGroup.headers.map((header, i) => (
+                        <th
+                          key={header.id}
+                          className={`bg-blue-500 ${
+                            i === 0 ? "rounded-l-md" : ""
+                          } ${
+                            i === headerGroup.headers.length - 1
+                              ? "rounded-r-md"
+                              : ""
+                          }`}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <tbody>
+                  {table.getRowModel().rows.map((row, i) => (
+                    <tr key={row.id} className="border-b-2 border-b-slate-300">
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                  <tr className="border-b-2 border-b-slate-300">
+                    <td className="relative">
+                      <input
+                        type="text"
+                        id="search"
+                        className="w-full"
+                        onKeyDown={(e) => handleNewItemKeyDown(e)}
+                      />
+                      {!!searchResult.length && (
+                        <InventorySearchInputComponent
+                          handleClickSearchResult={handleClickSearchResult}
+                          handleSearchResultKeyDown={handleSearchResultKeyDown}
+                          searchResult={searchResult}
+                        />
+                      )}
+                    </td>
+                    <td>
+                      <input type="text" disabled />{" "}
+                    </td>
+                    <td>
+                      <input type="text" disabled />{" "}
+                    </td>
+                    <td>
+                      <input type="number" disabled />{" "}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
         <div className="mr-3 flex justify-end">
           <button

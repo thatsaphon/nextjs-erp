@@ -7,7 +7,6 @@ type Props = {};
 
 export default async function AccountReceivablePage({}: Props) {
   const ar = await prisma.accountReceivable.findMany({});
-  console.log(ar);
   return (
     <>
       <div className="p-4">

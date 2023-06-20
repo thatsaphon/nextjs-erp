@@ -29,9 +29,16 @@ type Props = {
   sales: Partial<
     TransactionItem & { inventory?: Inventory & { prices?: Price[] } }
   >[];
+  submit: (
+    formData: FormData,
+    transactionItem: Partial<
+      TransactionItem & { inventory?: Inventory & { prices?: Price[] } }
+    >[],
+    ar: AccountReceivable
+  ) => Promise<void>;
 };
 
-export default function SalesFormComponent({ ars, sales }: Props) {
+export default function SalesFormComponent({ ars, sales, submit }: Props) {
   const [selectedAr, setSelectedAr] = useState<AccountReceivable | null>();
   const [searchResult, setSearchResult] = useState<
     (Inventory & { prices?: Price[] })[]
@@ -54,22 +61,38 @@ export default function SalesFormComponent({ ars, sales }: Props) {
       header: () => <div className="text-left">ชื่อสินค้า</div>,
     }),
     columnHelper.accessor((item) => item, {
-      cell: (info) => (
-        <select defaultValue={info.getValue().inventoryUnit || ""}>
-          {info.getValue().inventory?.prices?.map((price, i) => (
-            <option
-              key={i}
-              id={`${info.getValue().inventory?.code}-price-${i}`}
-              value={price.unit}>
-              {`${price.unit} (${price.quantity})`}
-            </option>
-          ))}
-        </select>
-      ),
+      cell: (info) => {
+        const initialValue = info.getValue().inventoryUnit;
+        const [value, setValue] = React.useState<string>(initialValue || "");
+        React.useEffect(() => {
+          setValue(initialValue || "");
+        }, [initialValue]);
+        return (
+          <select
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value);
+              info.table.options.meta?.updateData(
+                info.row.index,
+                info.column.id,
+                e.target.value
+              );
+            }}>
+            {info.getValue().inventory?.prices?.map((price, i) => (
+              <option
+                key={i}
+                id={`${info.getValue().inventory?.code}-price-${i}`}
+                value={price.unit}>
+                {`${price.unit} (${price.quantity})`}
+              </option>
+            ))}
+          </select>
+        );
+      },
       id: "inventoryUnit",
       header: () => <div className="text-left">หน่วย</div>,
     }),
-    columnHelper.accessor("inventoryUnitQuantity", {
+    columnHelper.accessor("unitQuantity", {
       cell: (info) => {
         const initialValue = info.getValue();
         const [value, setValue] = React.useState<number>(initialValue || 0);
@@ -131,18 +154,38 @@ export default function SalesFormComponent({ ars, sales }: Props) {
     data: tableState,
     columns,
     meta: {
-      updateData: (rowIndex: number, columnId: number, value: unknown) => {
+      updateData: (rowIndex: number, columnId: string, value: unknown) => {
         // Skip page index reset until after next rerender
         setTableState((old) =>
-          old.map((row, index) => {
-            if (index === rowIndex) {
-              return {
-                ...old[rowIndex]!,
-                [columnId]: value,
-              };
-            }
-            return row;
-          })
+          old
+            .map((row, index) => {
+              if (index === rowIndex) {
+                if (row.inventory) {
+                  const priceUnit = row.inventory.prices?.find(
+                    (price) =>
+                      (columnId === "inventoryUnit"
+                        ? value
+                        : row.inventoryUnit) === price.unit
+                  );
+                  if (priceUnit) {
+                    row.inventoryPricePerUnit = priceUnit.price;
+                    row.inventoryUnitQuantity = priceUnit.quantity;
+                  }
+                }
+                return {
+                  ...old[rowIndex]!,
+                  [columnId]: value,
+                  inventoryPricePerUnit: row.inventoryPricePerUnit,
+                };
+              }
+              return row;
+            })
+            .map((row, index) => {
+              if (row.inventoryPricePerUnit && row.unitQuantity) {
+                row.creditAmount = row.inventoryPricePerUnit * row.unitQuantity;
+              }
+              return row;
+            })
         );
       },
     },
@@ -221,12 +264,12 @@ export default function SalesFormComponent({ ars, sales }: Props) {
       const newSales = [...prev];
       newSales.push({
         inventory,
-        inventoryUnitQuantity: 1,
+        unitQuantity: 1,
         inventoryPricePerUnit:
           inventory.prices && inventory.prices.length
             ? inventory.prices[0].price
             : 0,
-        debitAmount:
+        creditAmount:
           inventory.prices && inventory.prices.length
             ? inventory.prices[0].price
             : 0,
@@ -238,7 +281,12 @@ export default function SalesFormComponent({ ars, sales }: Props) {
 
   return (
     <>
-      <form className="flex h-full flex-col justify-between" action="">
+      <form
+        className="flex h-full flex-col justify-between"
+        action={async (data) => {
+          if (!selectedAr) throw new Error("ไม่ได้เลือกลูกค้า");
+          await submit(data, tableState, selectedAr);
+        }}>
         <div className="flex w-full flex-col justify-between gap-2 lg:flex-row">
           <div className="relative flex-1">
             <label htmlFor="ar" className="text-gray-700">
@@ -371,7 +419,7 @@ export default function SalesFormComponent({ ars, sales }: Props) {
         </div>
         <div className="mr-3 flex justify-end">
           <button
-            type="button"
+            type="submit"
             className="rounded-lg  bg-indigo-600 px-4 py-2 text-center text-base font-semibold text-white shadow-md transition duration-200 ease-in hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2  focus:ring-offset-indigo-200 ">
             ยืนยัน
           </button>

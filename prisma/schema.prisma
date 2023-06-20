@@ -102,6 +102,7 @@ model TransactionItem {
   accountReceivable     AccountReceivable?  @relation(fields: [accountReceivableId], references: [id])
   cashId                Int?
   cash                  Cash?               @relation(fields: [cashId], references: [id])
+  unitQuantity          Float?
   quantity              Float?
   debitAmount           Float
   creditAmount          Float

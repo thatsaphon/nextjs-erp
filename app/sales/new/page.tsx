@@ -24,7 +24,7 @@ export default async function NewSalesPage({}: Props) {
           sales={[]}
           submit={async (data, transactionItem, ar) => {
             "use server";
-            createNewSales(data, transactionItem, ar);
+            await createNewSales(data, transactionItem, ar);
           }}></SalesFormComponent>
       </div>
     </>

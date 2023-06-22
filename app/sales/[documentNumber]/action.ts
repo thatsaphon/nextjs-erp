@@ -9,30 +9,26 @@ import {
 } from "@prisma/client";
 
 import dayjs from "dayjs";
-import { redirect } from "next/dist/client/components/navigation";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export async function editSales(
   formData: FormData,
   transactionItem: Partial<
     TransactionItem & { inventory?: Inventory & { prices?: Price[] } }
   >[],
-  ar: AccountReceivable
+  ar: AccountReceivable,
+  documentNumber: string
 ) {
-  const lastInv = await prisma.transaction.findFirst({
-    where: { documentNumber: { contains: `SO${dayjs().format("YYYYMMDD")}` } },
-    orderBy: { documentNumber: "desc" },
-    select: { documentNumber: true },
-  });
-  let lastNumber = `000`;
-  if (lastInv?.documentNumber) {
-    lastNumber = lastInv.documentNumber.slice(-3);
-  }
-  const newDocNumber = `${+lastNumber + 1}`.padStart(3, "0");
-
+  const dateFormData = formData.get("date");
+  const date = new Date(dateFormData as string);
   const sales: Partial<TransactionItem>[] = transactionItem.map((item) => ({
     ...item,
     inventory: undefined,
+    transactionId: undefined,
+    accountReceivable: undefined,
     type: "Inventory",
+    unitQuantity: +(item.unitQuantity as number),
     quantity:
       item.inventoryUnitQuantity && item.unitQuantity
         ? item.inventoryUnitQuantity * item.unitQuantity
@@ -51,16 +47,18 @@ export async function editSales(
     ),
     creditAmount: 0,
   });
-
-  await prisma.transaction.create({
+  await prisma.transaction.update({
+    where: { documentNumber },
     data: {
-      date: new Date(),
-      remark: "",
-      type: "CreditSales",
-      documentNumber: `SO${dayjs().format("YYYYMMDD")}${newDocNumber}`,
-      transactionItems: { createMany: { data: sales } },
+      date: date,
+      transactionItems: {
+        deleteMany: {},
+        createMany: { data: sales },
+      },
     },
   });
 
+  revalidatePath(`/sales/${documentNumber}`);
+  revalidatePath(`/sales`);
   redirect(`/sales`);
 }

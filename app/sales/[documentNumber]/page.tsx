@@ -6,11 +6,30 @@ import { editSales } from "./action";
 
 type Props = { params: { documentNumber: string } };
 
+export const revalidate = 3600;
 export default async function EditSalesPage({
   params: { documentNumber },
 }: Props) {
   const ars = await prisma.accountReceivable.findMany({});
-  if (!ars) return <>Not Found</>;
+  const transaction = await prisma.transaction.findFirst({
+    where: { type: { in: ["CashSales", "CreditSales"] }, documentNumber },
+    include: {
+      transactionItems: {
+        include: {
+          inventory: { include: { prices: {} } },
+          accountReceivable: {},
+        },
+      },
+    },
+  });
+  const salesItemOnly =
+    transaction?.transactionItems.filter((item) => item.type === "Inventory") ||
+    [];
+  const ar = transaction?.transactionItems.find(
+    (item) => item.type === "AR"
+  )?.accountReceivable;
+
+  if (!ars || !transaction || !ar) return <>Not Found</>;
   return (
     <>
       <div className="mx-auto mt-4 flex w-full max-w-6xl justify-end">
@@ -19,11 +38,17 @@ export default async function EditSalesPage({
       <div className="m-2 mx-auto min-h-[500px] w-full max-w-4xl rounded-lg bg-slate-200 p-3">
         <SalesFormComponent
           ars={ars}
-          sales={[]}
-          submit={async (data, transactionItem, ar) => {
+          sales={salesItemOnly}
+          ar={ar}
+          submit={async (data, transactionItem, ar, documentNumber) => {
             "use server";
-            editSales(data, transactionItem, ar);
-          }}></SalesFormComponent>
+            if (!documentNumber)
+              throw new Error("ไม่พบเลขที่เอกสารที่ต้องการแก้ไข");
+            await editSales(data, transactionItem, ar, documentNumber);
+          }}
+          documentNumber={documentNumber}
+          date={transaction.date}
+        />
       </div>
     </>
   );

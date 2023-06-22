@@ -11,7 +11,7 @@ import {
 import dayjs from "dayjs";
 import { redirect } from "next/dist/client/components/navigation";
 
-export async function createNewSales(
+export async function editSales(
   formData: FormData,
   transactionItem: Partial<
     TransactionItem & { inventory?: Inventory & { prices?: Price[] } }

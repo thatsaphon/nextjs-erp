@@ -26,27 +26,46 @@ const columnHelper = createColumnHelper<
 
 type Props = {
   ars: AccountReceivable[];
-  sales: Partial<
-    TransactionItem & { inventory?: Inventory & { prices?: Price[] } }
-  >[];
+  sales: (TransactionItem & {
+    inventory:
+      | (Inventory & {
+          prices: Price[];
+        })
+      | null;
+  })[];
   submit: (
     formData: FormData,
     transactionItem: Partial<
       TransactionItem & { inventory?: Inventory & { prices?: Price[] } }
     >[],
-    ar: AccountReceivable
+    ar: AccountReceivable,
+    documentNumber?: string
   ) => Promise<void>;
+  ar: AccountReceivable;
+  documentNumber?: string;
+  date?: Date;
 };
 
-export default function SalesFormComponent({ ars, sales, submit }: Props) {
-  const [selectedAr, setSelectedAr] = useState<AccountReceivable | null>();
+export default function SalesFormComponent({
+  ars,
+  sales,
+  submit,
+  ar,
+  documentNumber,
+  date,
+}: Props) {
+  const [selectedAr, setSelectedAr] = useState<AccountReceivable | null>(ar);
   const [searchResult, setSearchResult] = useState<
     (Inventory & { prices?: Price[] })[]
   >([]);
   const [tableState, setTableState] = useState<
-    Partial<
-      TransactionItem & { inventory?: Inventory & { prices?: Price[] } }
-    >[]
+    (TransactionItem & {
+      inventory:
+        | (Inventory & {
+            prices: Price[];
+          })
+        | null;
+    })[]
   >([...sales]);
 
   const columns = [
@@ -109,7 +128,7 @@ export default function SalesFormComponent({ ars, sales, submit }: Props) {
               info.table.options.meta?.updateData(
                 info.row.index,
                 info.column.id,
-                e.target.value
+                +e.target.value
               );
             }}
           />
@@ -134,7 +153,7 @@ export default function SalesFormComponent({ ars, sales, submit }: Props) {
               info.table.options.meta?.updateData(
                 info.row.index,
                 info.column.id,
-                e.target.value
+                +e.target.value
               );
             }}
           />
@@ -149,7 +168,6 @@ export default function SalesFormComponent({ ars, sales, submit }: Props) {
     }),
   ];
 
-  // const [expanded, setExpanded] = React.useState<ExpandedState>({});
   const table = useReactTable({
     data: tableState,
     columns,
@@ -160,7 +178,7 @@ export default function SalesFormComponent({ ars, sales, submit }: Props) {
           old
             .map((row, index) => {
               if (index === rowIndex) {
-                if (row.inventory) {
+                if (row.inventory && columnId === "inventoryUnit") {
                   const priceUnit = row.inventory.prices?.find(
                     (price) =>
                       (columnId === "inventoryUnit"
@@ -174,8 +192,8 @@ export default function SalesFormComponent({ ars, sales, submit }: Props) {
                 }
                 return {
                   ...old[rowIndex]!,
-                  [columnId]: value,
                   inventoryPricePerUnit: row.inventoryPricePerUnit,
+                  [columnId]: value,
                 };
               }
               return row;
@@ -189,12 +207,7 @@ export default function SalesFormComponent({ ars, sales, submit }: Props) {
         );
       },
     },
-    state: {
-      // expanded,
-    },
     getCoreRowModel: getCoreRowModel(),
-    // getExpandedRowModel: getExpandedRowModel(),
-    // onExpandedChange: setExpanded,
   });
 
   function handleArKeyDown(e: KeyboardEvent<HTMLButtonElement>, total: number) {
@@ -265,6 +278,8 @@ export default function SalesFormComponent({ ars, sales, submit }: Props) {
       newSales.push({
         inventory,
         unitQuantity: 1,
+        inventoryUnit: inventory.prices && inventory.prices[0].unit,
+        inventoryUnitQuantity: inventory.prices && inventory.prices[0].quantity,
         inventoryPricePerUnit:
           inventory.prices && inventory.prices.length
             ? inventory.prices[0].price
@@ -281,11 +296,12 @@ export default function SalesFormComponent({ ars, sales, submit }: Props) {
 
   return (
     <>
+      <div>{documentNumber}</div>
       <form
         className="flex h-full flex-col justify-between"
         action={async (data) => {
           if (!selectedAr) throw new Error("ไม่ได้เลือกลูกค้า");
-          await submit(data, tableState, selectedAr);
+          await submit(data, tableState, selectedAr, documentNumber);
         }}>
         <div className="flex w-full flex-col justify-between gap-2 lg:flex-row">
           <div className="relative flex-1">
@@ -334,7 +350,7 @@ export default function SalesFormComponent({ ars, sales, submit }: Props) {
             <input
               type="date"
               id="date"
-              defaultValue={dayjs().format("YYYY-MM-DD")}
+              defaultValue={dayjs(date).format("YYYY-MM-DD")}
               className="h-12 w-full flex-1 appearance-none rounded-lg border border-gray-300 border-transparent bg-white px-4 py-2 text-base text-gray-700 placeholder-gray-400 shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-purple-600"
               name="date"
               placeholder="วันที่"

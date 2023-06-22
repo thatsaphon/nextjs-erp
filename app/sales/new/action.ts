@@ -9,7 +9,7 @@ import {
 } from "@prisma/client";
 
 import dayjs from "dayjs";
-import { redirect } from "next/dist/client/components/navigation";
+import { redirect } from "next/navigation";
 
 export async function createNewSales(
   formData: FormData,
@@ -61,6 +61,5 @@ export async function createNewSales(
       transactionItems: { createMany: { data: sales } },
     },
   });
-
   redirect(`/sales`);
 }

@@ -6,6 +6,7 @@ import { transformToSalesTableModel } from "@/model/SalesTableModel";
 
 type Props = {};
 
+export const revalidate = 3600;
 export default async function SalesListPage({}: Props) {
   const salesList = await prisma.transaction.findMany({
     where: {

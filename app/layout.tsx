@@ -37,6 +37,11 @@ export default function RootLayout({
               </Link>
               <Link
                 className="text-slate-700 hover:cursor-pointer hover:text-slate-600"
+                href={"/account-payable"}>
+                เจ้าหนี้
+              </Link>
+              <Link
+                className="text-slate-700 hover:cursor-pointer hover:text-slate-600"
                 href={"/inventory"}>
                 ข้อมูลสินค้า
               </Link>

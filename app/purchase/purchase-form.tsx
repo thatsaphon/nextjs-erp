@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  AccountReceivable,
+  AccountPayable,
   Inventory,
   Price,
   TransactionItem,
@@ -22,8 +22,8 @@ const columnHelper = createColumnHelper<
 >();
 
 type Props = {
-  ars: AccountReceivable[];
-  sales: (TransactionItem & {
+  aps: AccountPayable[];
+  purchase: (TransactionItem & {
     inventory:
       | (Inventory & {
           prices: Price[];
@@ -35,23 +35,23 @@ type Props = {
     transactionItem: Partial<
       TransactionItem & { inventory?: Inventory & { prices?: Price[] } }
     >[],
-    ar: AccountReceivable,
+    ap: AccountPayable,
     documentNumber?: string
   ) => Promise<void>;
-  ar: AccountReceivable;
+  ap?: AccountPayable;
   documentNumber?: string;
   date?: Date;
 };
 
-export default function SalesFormComponent({
-  ars,
-  sales,
+export default function PurchaseFormComponent({
+  aps,
+  purchase,
   submit,
-  ar,
+  ap,
   documentNumber,
   date,
 }: Props) {
-  const [selectedAr, setSelectedAr] = useState<AccountReceivable | null>(ar);
+  const [selectedAp, setSelectedAp] = useState<AccountPayable | null>(ap);
   const [searchResult, setSearchResult] = useState<
     (Inventory & { prices?: Price[] })[]
   >([]);
@@ -63,7 +63,7 @@ export default function SalesFormComponent({
           })
         | null;
     })[]
-  >([...sales]);
+  >([...purchase]);
 
   const columns = [
     columnHelper.accessor((item) => item.inventory?.code, {
@@ -197,7 +197,7 @@ export default function SalesFormComponent({
             })
             .map((row, index) => {
               if (row.inventoryPricePerUnit && row.unitQuantity) {
-                row.creditAmount = row.inventoryPricePerUnit * row.unitQuantity;
+                row.debitAmount = row.inventoryPricePerUnit * row.unitQuantity;
               }
               return row;
             })
@@ -281,7 +281,7 @@ export default function SalesFormComponent({
           inventory.prices && inventory.prices.length
             ? inventory.prices[0].price
             : 0,
-        creditAmount:
+        debitAmount:
           inventory.prices && inventory.prices.length
             ? inventory.prices[0].price
             : 0,
@@ -297,15 +297,15 @@ export default function SalesFormComponent({
       <form
         className="flex h-full flex-col justify-between"
         action={async (data) => {
-          if (!selectedAr) throw new Error("ไม่ได้เลือกลูกค้า");
-          await submit(data, tableState, selectedAr, documentNumber);
+          if (!selectedAp) throw new Error("ไม่ได้เลือกลูกค้า");
+          await submit(data, tableState, selectedAp, documentNumber);
         }}>
         <div className="flex w-full flex-col justify-between gap-2 lg:flex-row">
           <div className="relative flex-1">
             <label htmlFor="ar" className="text-gray-700">
               ลูกค้า
             </label>
-            {!selectedAr && (
+            {!selectedAp && (
               <input
                 type="text"
                 id="ar"
@@ -314,27 +314,27 @@ export default function SalesFormComponent({
                 placeholder="ลูกค้า"
               />
             )}
-            {!selectedAr && (
+            {!selectedAp && (
               <div className="absolute z-10 min-h-[200px] w-full overflow-scroll bg-white">
-                {ars.map((ar, i) => (
+                {aps.map((ar, i) => (
                   <button
                     key={i}
                     id={`ar-${i}`}
-                    onClick={() => setSelectedAr(ar)}
+                    onClick={() => setSelectedAp(ar)}
                     type="button"
-                    onKeyDown={(e) => handleArKeyDown(e, ars.length)}
+                    onKeyDown={(e) => handleArKeyDown(e, aps.length)}
                     className="w-full p-2 text-left hover:bg-slate-200 focus:bg-slate-200 focus:outline-none">
                     {ar.name}
                   </button>
                 ))}
               </div>
             )}
-            {selectedAr && (
+            {selectedAp && (
               <div className="p-2 font-semibold">
-                {selectedAr.name}
+                {selectedAp.name}
                 <span
                   className="ml-2 cursor-pointer text-blue-500 underline"
-                  onClick={() => setSelectedAr(null)}>
+                  onClick={() => setSelectedAp(null)}>
                   เปลี่ยน
                 </span>
               </div>

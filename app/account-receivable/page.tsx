@@ -5,6 +5,7 @@ import AccountReceivableTableComponent from "./account-receivable-table";
 
 type Props = {};
 
+export const revalidate = 3600;
 export default async function AccountReceivablePage({}: Props) {
   const ar = await prisma.accountReceivable.findMany({});
   return (

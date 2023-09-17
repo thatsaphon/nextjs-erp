@@ -1,19 +1,20 @@
-import Link from "next/link";
-import React from "react";
-import InventoryFormComponent from "../inventory-form";
-import { prisma } from "@/lib/prisma";
-import { updateInventory } from "./action";
+import Link from "next/link"
+import React from "react"
+import InventoryFormComponent from "../inventory-form"
+import { prisma } from "@/lib/prisma"
+import { updateInventory } from "./action"
+import next from "next/types"
 
-type Props = { params: { code: string } };
+type Props = { params: { code: string } }
 
-export const revalidate = 3600;
+export const revalidate = 3600
 export default async function InventoryDetailPage({ params }: Props) {
   const inventory = await prisma.inventory.findFirst({
     where: { code: params.code },
     include: { prices: {} },
-  });
+  })
 
-  if (!inventory) return <>Not found</>;
+  if (!inventory) return <>Not found</>
 
   return (
     <>
@@ -28,11 +29,11 @@ export default async function InventoryDetailPage({ params }: Props) {
         <InventoryFormComponent
           inventory={inventory}
           submit={async (data) => {
-            "use server";
-            const res = await updateInventory(data, params.code);
+            "use server"
+            const res = await updateInventory(data, params.code)
           }}
         />
       </div>
     </>
-  );
+  )
 }

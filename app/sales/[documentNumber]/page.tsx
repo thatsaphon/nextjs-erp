@@ -1,16 +1,17 @@
-import { prisma } from "@/lib/prisma";
-import Link from "next/link";
-import React from "react";
-import SalesFormComponent from "../sales-form";
-import { editSales } from "./action";
+import { prisma } from "@/lib/prisma"
+import Link from "next/link"
+import React from "react"
+import SalesFormComponent from "../sales-form"
+import { editSales } from "./action"
 
-type Props = { params: { documentNumber: string } };
+type Props = { params: { documentNumber: string } }
 
-export const revalidate = 3600;
+export const revalidate = 3600
 export default async function EditSalesPage({
   params: { documentNumber },
 }: Props) {
-  const ars = await prisma.accountReceivable.findMany({});
+  console.log(documentNumber)
+  const ars = await prisma.accountReceivable.findMany({})
   const transaction = await prisma.transaction.findFirst({
     where: { type: { in: ["CashSales", "CreditSales"] }, documentNumber },
     include: {
@@ -21,15 +22,15 @@ export default async function EditSalesPage({
         },
       },
     },
-  });
+  })
   const salesItemOnly =
     transaction?.transactionItems.filter((item) => item.type === "Inventory") ||
-    [];
+    []
   const ar = transaction?.transactionItems.find(
     (item) => item.type === "AR"
-  )?.accountReceivable;
+  )?.accountReceivable
 
-  if (!ars || !transaction || !ar) return <>Not Found</>;
+  if (!ars || !transaction || !ar) return <>Not Found</>
   return (
     <>
       <div className="mx-auto mt-4 flex w-full max-w-6xl justify-end">
@@ -41,15 +42,15 @@ export default async function EditSalesPage({
           sales={salesItemOnly}
           ar={ar}
           submit={async (data, transactionItem, ar, documentNumber) => {
-            "use server";
+            "use server"
             if (!documentNumber)
-              throw new Error("ไม่พบเลขที่เอกสารที่ต้องการแก้ไข");
-            await editSales(data, transactionItem, ar, documentNumber);
+              throw new Error("ไม่พบเลขที่เอกสารที่ต้องการแก้ไข")
+            await editSales(data, transactionItem, ar, documentNumber)
           }}
           documentNumber={documentNumber}
           date={transaction.date}
         />
       </div>
     </>
-  );
+  )
 }

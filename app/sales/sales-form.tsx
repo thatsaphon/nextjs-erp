@@ -1,35 +1,36 @@
-"use client";
+"use client"
 
 import {
   AccountReceivable,
   Inventory,
   Price,
   TransactionItem,
-} from "@prisma/client";
+} from "@prisma/client"
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
-} from "@tanstack/react-table";
-import dayjs from "dayjs";
-import React, { useState, KeyboardEvent, useEffect } from "react";
-import { searchInventories } from "./action";
-import InventorySearchInputComponent from "./inventory-search-input";
+} from "@tanstack/react-table"
+import dayjs from "dayjs"
+import React, { useState, KeyboardEvent, useEffect } from "react"
+import { searchInventories } from "./action"
+import InventorySearchInputComponent from "./inventory-search-input"
+import Link from "next/link"
 
 const columnHelper = createColumnHelper<
   Partial<TransactionItem> & { inventory?: Inventory & { prices?: Price[] } }
->();
+>()
 
 type Props = {
-  ars: AccountReceivable[];
+  ars: AccountReceivable[]
   sales: (TransactionItem & {
     inventory:
       | (Inventory & {
-          prices: Price[];
+          prices: Price[]
         })
-      | null;
-  })[];
+      | null
+  })[]
   submit: (
     formData: FormData,
     transactionItem: Partial<
@@ -37,11 +38,11 @@ type Props = {
     >[],
     ar: AccountReceivable,
     documentNumber?: string
-  ) => Promise<void>;
-  ar: AccountReceivable;
-  documentNumber?: string;
-  date?: Date;
-};
+  ) => Promise<void>
+  ar: AccountReceivable
+  documentNumber?: string
+  date?: Date
+}
 
 export default function SalesFormComponent({
   ars,
@@ -51,19 +52,19 @@ export default function SalesFormComponent({
   documentNumber,
   date,
 }: Props) {
-  const [selectedAr, setSelectedAr] = useState<AccountReceivable | null>(ar);
+  const [selectedAr, setSelectedAr] = useState<AccountReceivable | null>(ar)
   const [searchResult, setSearchResult] = useState<
     (Inventory & { prices?: Price[] })[]
-  >([]);
+  >([])
   const [tableState, setTableState] = useState<
     (TransactionItem & {
       inventory:
         | (Inventory & {
-            prices: Price[];
+            prices: Price[]
           })
-        | null;
+        | null
     })[]
-  >([...sales]);
+  >([...sales])
 
   const columns = [
     columnHelper.accessor((item) => item.inventory?.code, {
@@ -78,21 +79,21 @@ export default function SalesFormComponent({
     }),
     columnHelper.accessor((item) => item, {
       cell: (info) => {
-        const initialValue = info.getValue().inventoryUnit;
-        const [value, setValue] = React.useState<string>(initialValue || "");
+        const initialValue = info.getValue().inventoryUnit
+        const [value, setValue] = React.useState<string>(initialValue || "")
         React.useEffect(() => {
-          setValue(initialValue || "");
-        }, [initialValue]);
+          setValue(initialValue || "")
+        }, [initialValue])
         return (
           <select
             value={value}
             onChange={(e) => {
-              setValue(e.target.value);
+              setValue(e.target.value)
               info.table.options.meta?.updateData(
                 info.row.index,
                 info.column.id,
                 e.target.value
-              );
+              )
             }}>
             {info.getValue().inventory?.prices?.map((price, i) => (
               <option
@@ -103,18 +104,18 @@ export default function SalesFormComponent({
               </option>
             ))}
           </select>
-        );
+        )
       },
       id: "inventoryUnit",
       header: () => <div className="text-left">หน่วย</div>,
     }),
     columnHelper.accessor("unitQuantity", {
       cell: (info) => {
-        const initialValue = info.getValue();
-        const [value, setValue] = React.useState<number>(initialValue || 0);
+        const initialValue = info.getValue()
+        const [value, setValue] = React.useState<number>(initialValue || 0)
         React.useEffect(() => {
-          setValue(initialValue || 0);
-        }, [initialValue]);
+          setValue(initialValue || 0)
+        }, [initialValue])
 
         return (
           <input
@@ -126,20 +127,20 @@ export default function SalesFormComponent({
                 info.row.index,
                 info.column.id,
                 +e.target.value
-              );
+              )
             }}
           />
-        );
+        )
       },
       header: () => <div className="text-left">จำนวน</div>,
     }),
     columnHelper.accessor("inventoryPricePerUnit", {
       cell: (info) => {
-        const initialValue = info.getValue();
-        const [value, setValue] = React.useState<number>(initialValue || 0);
+        const initialValue = info.getValue()
+        const [value, setValue] = React.useState<number>(initialValue || 0)
         React.useEffect(() => {
-          setValue(initialValue || 0);
-        }, [initialValue]);
+          setValue(initialValue || 0)
+        }, [initialValue])
 
         return (
           <input
@@ -151,10 +152,10 @@ export default function SalesFormComponent({
                 info.row.index,
                 info.column.id,
                 +e.target.value
-              );
+              )
             }}
           />
-        );
+        )
       },
       header: () => <div className="text-left">ราคา</div>,
     }),
@@ -163,7 +164,7 @@ export default function SalesFormComponent({
       id: "total",
       header: () => <div className="text-left">รวม</div>,
     }),
-  ];
+  ]
 
   const table = useReactTable({
     data: tableState,
@@ -181,40 +182,40 @@ export default function SalesFormComponent({
                       (columnId === "inventoryUnit"
                         ? value
                         : row.inventoryUnit) === price.unit
-                  );
+                  )
                   if (priceUnit) {
-                    row.inventoryPricePerUnit = priceUnit.price;
-                    row.inventoryUnitQuantity = priceUnit.quantity;
+                    row.inventoryPricePerUnit = priceUnit.price
+                    row.inventoryUnitQuantity = priceUnit.quantity
                   }
                 }
                 return {
                   ...old[rowIndex]!,
                   inventoryPricePerUnit: row.inventoryPricePerUnit,
                   [columnId]: value,
-                };
+                }
               }
-              return row;
+              return row
             })
             .map((row, index) => {
               if (row.inventoryPricePerUnit && row.unitQuantity) {
-                row.creditAmount = row.inventoryPricePerUnit * row.unitQuantity;
+                row.creditAmount = row.inventoryPricePerUnit * row.unitQuantity
               }
-              return row;
+              return row
             })
-        );
+        )
       },
     },
     getCoreRowModel: getCoreRowModel(),
-  });
+  })
 
   function handleArKeyDown(e: KeyboardEvent<HTMLButtonElement>, total: number) {
     if (e.code === "ArrowUp" && e.target instanceof Element) {
-      if (e.target.id === "ar-0") return;
-      document.getElementById(`ar-${+e.target.id.split("-")[1] + -1}`)?.focus();
+      if (e.target.id === "ar-0") return
+      document.getElementById(`ar-${+e.target.id.split("-")[1] + -1}`)?.focus()
     }
     if (e.code === "ArrowDown" && e.target instanceof Element) {
-      if (e.target.id === `ar-${total - 1}`) return;
-      document.getElementById(`ar-${+e.target.id.split("-")[1] + 1}`)?.focus();
+      if (e.target.id === `ar-${total - 1}`) return
+      document.getElementById(`ar-${+e.target.id.split("-")[1] + 1}`)?.focus()
     }
   }
 
@@ -225,21 +226,21 @@ export default function SalesFormComponent({
         e.code === "NumpadEnter") &&
       e.target instanceof Element
     ) {
-      e.preventDefault();
-      const inventories = await searchInventories(e.target.value);
-      setSearchResult(inventories);
+      e.preventDefault()
+      const inventories = await searchInventories(e.target.value)
+      setSearchResult(inventories)
       setTimeout(() => {
-        document.getElementById(`search-0`)?.focus();
-      }, 100);
+        document.getElementById(`search-0`)?.focus()
+      }, 100)
     }
   }
 
   function handleClickSearchResult(
     inventory: Inventory & {
-      prices?: Price[];
+      prices?: Price[]
     }
   ) {
-    pushNew(inventory);
+    pushNew(inventory)
   }
 
   async function handleSearchResultKeyDown(
@@ -248,30 +249,30 @@ export default function SalesFormComponent({
     inventory: Inventory & { prices?: Price[] }
   ) {
     if (e.code === "Enter" || e.code === "Tab") {
-      e.preventDefault();
-      pushNew(inventory);
+      e.preventDefault()
+      pushNew(inventory)
     }
 
     if (e.code === "ArrowUp" && e.target instanceof Element) {
-      if (e.target.id === "search-0") return;
+      if (e.target.id === "search-0") return
       document
         .getElementById(`search-${+e.target.id.split("-")[1] + -1}`)
-        ?.focus();
+        ?.focus()
     }
     if (e.code === "ArrowDown" && e.target instanceof Element) {
-      if (e.target.id === `search-${total - 1}`) return;
+      if (e.target.id === `search-${total - 1}`) return
       document
         .getElementById(`search-${+e.target.id.split("-")[1] + 1}`)
-        ?.focus();
+        ?.focus()
     }
   }
   function pushNew(
     inventory: Inventory & {
-      prices?: Price[];
+      prices?: Price[]
     }
   ) {
     setTableState((prev) => {
-      const newSales = [...prev];
+      const newSales = [...prev]
       newSales.push({
         inventory,
         unitQuantity: 1,
@@ -285,10 +286,10 @@ export default function SalesFormComponent({
           inventory.prices && inventory.prices.length
             ? inventory.prices[0].price
             : 0,
-      });
-      return newSales;
-    });
-    setSearchResult([]);
+      })
+      return newSales
+    })
+    setSearchResult([])
   }
 
   return (
@@ -297,8 +298,8 @@ export default function SalesFormComponent({
       <form
         className="flex h-full flex-col justify-between"
         action={async (data) => {
-          if (!selectedAr) throw new Error("ไม่ได้เลือกลูกค้า");
-          await submit(data, tableState, selectedAr, documentNumber);
+          if (!selectedAr) throw new Error("ไม่ได้เลือกลูกค้า")
+          await submit(data, tableState, selectedAr, documentNumber)
         }}>
         <div className="flex w-full flex-col justify-between gap-2 lg:flex-row">
           <div className="relative flex-1">
@@ -431,6 +432,13 @@ export default function SalesFormComponent({
           </div>
         </div>
         <div className="mr-3 flex justify-end">
+          <Link href={"/api/download/pdf"}>
+            <button
+              type="button"
+              className="rounded-lg  bg-indigo-600 px-4 py-2 text-center text-base font-semibold text-white shadow-md transition duration-200 ease-in hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2  focus:ring-offset-indigo-200 ">
+              pdf
+            </button>
+          </Link>
           <button
             type="submit"
             className="rounded-lg  bg-indigo-600 px-4 py-2 text-center text-base font-semibold text-white shadow-md transition duration-200 ease-in hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2  focus:ring-offset-indigo-200 ">
@@ -439,5 +447,5 @@ export default function SalesFormComponent({
         </div>
       </form>
     </>
-  );
+  )
 }

@@ -1,6 +1,6 @@
 import { findFirstInvoice } from "@/api/findFirstInvoice"
 import dayjs from "dayjs"
-import SideNavClientComponent from "./client/side-nav-client"
+import SideNavClientComponent from "./side-nav-client"
 
 type Props = {}
 

@@ -1,7 +1,7 @@
 import Link from "next/link"
 import "./globals.css"
 import { Noto_Sans_Thai } from "next/font/google"
-import SideNavMainComponent from "@/components/side-nav"
+import SideNavMainComponent from "@/components/side-nav/side-nav-server"
 
 const inter = Noto_Sans_Thai({ subsets: ["latin"] })
 

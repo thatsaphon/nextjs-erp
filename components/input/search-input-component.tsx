@@ -20,7 +20,6 @@ export default function SearchInputComponent({
   const debounced = useDebouncedCallback(
     // function
     async (value) => {
-      // console.log(value)
       await fetch(`/api/ar/${value}`, {
         next: { revalidate: 3600, tags: ["ar", value] },
       })
@@ -31,12 +30,10 @@ export default function SearchInputComponent({
   )
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    console.log(e.target.value)
     setValue(e.target.value)
   }
 
   async function handleSearchKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    console.log(e)
     if ((e.key === "ฦ" || e.code === "?") && e.target instanceof Element) {
       e.preventDefault()
 

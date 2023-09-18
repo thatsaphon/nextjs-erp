@@ -16,32 +16,37 @@ export default function InputComponent({
   if (children)
     return (
       <>
-        <div>
-          {label && (
-            <label htmlFor={name}>
-              {label}
-              <div>{children}</div>
-            </label>
-          )}
-        </div>
+        {label && (
+          <label htmlFor={name}>
+            {label}
+            <div>{children}</div>
+          </label>
+        )}
       </>
     )
   return (
     <>
-      <div>
-        {label && (
-          <label htmlFor={name}>
-            {label}
-            <div>
-              <input
-                name={name}
-                className="mt-1 w-full rounded-md p-3"
-                type={type}
-              />
-            </div>
-          </label>
-        )}
-      </div>
+      {label && (
+        <label htmlFor={name}>
+          {label}
+          <div>
+            <input
+              name={name}
+              className="mt-1 w-full rounded-md p-3"
+              type={type}
+            />
+          </div>
+        </label>
+      )}
+      {!label && (
+        <div>
+          <input
+            name={name}
+            className="mt-1 w-full rounded-md p-3"
+            type={type}
+          />
+        </div>
+      )}
     </>
   )
 }

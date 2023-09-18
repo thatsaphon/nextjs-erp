@@ -31,7 +31,6 @@ export default async function SalesListPage({ params, searchParams }: Props) {
       },
     },
   })
-  console.log(salesList.length)
 
   return (
     <>

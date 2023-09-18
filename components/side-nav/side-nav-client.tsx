@@ -8,7 +8,6 @@ type Props = { monthList?: string[] }
 export default function SideNavClientComponent({ monthList }: Props) {
   const path = usePathname()
   const query = useSearchParams()
-  console.log(query.toString())
 
   if (path.split("?")[0] === "/sales")
     return (

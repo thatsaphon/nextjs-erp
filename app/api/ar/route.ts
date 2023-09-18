@@ -6,7 +6,6 @@ export async function GET(
   { params }: { params: { slug: string } }
 ) {
   const ars = await prisma.accountReceivable.findMany({
-    where: { name: { contains: params.slug } },
     orderBy: { name: "asc" },
   })
   return NextResponse.json(ars)

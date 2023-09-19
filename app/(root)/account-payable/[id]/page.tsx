@@ -1,8 +1,8 @@
 import React from "react"
-import AccountPayableFormComponent from "../../(root)/account-payable/account-payable-form"
 import Link from "next/link"
 import { editAccountPayable } from "./action"
 import { prisma } from "@/lib/prisma"
+import AccountPayableFormComponent from "../account-payable-form"
 
 type Props = { params: { id: number } }
 

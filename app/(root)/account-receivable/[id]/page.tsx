@@ -1,5 +1,5 @@
 import React from "react"
-import AccountReceivableFormComponent from "../../(root)/account-receivable/account-receivable-form"
+import AccountReceivableFormComponent from "../account-receivable-form"
 import Link from "next/link"
 import { editAccountReceivable } from "./action"
 import { prisma } from "@/lib/prisma"

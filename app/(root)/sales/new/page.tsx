@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import React from "react"
-import SalesFormComponent from "../../../sales/sales-form"
 import { createNewSales } from "./action"
+import SalesFormComponent from "../sales-form"
 
 type Props = {}
 

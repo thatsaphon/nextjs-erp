@@ -1,7 +1,7 @@
 import Link from "next/link"
 import React from "react"
-import AccountPayableFormComponent from "../../(root)/account-payable/account-payable-form"
 import { createAccountPayable } from "./action"
+import AccountPayableFormComponent from "../account-payable-form"
 
 type Props = {}
 

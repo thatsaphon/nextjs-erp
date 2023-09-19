@@ -1,7 +1,7 @@
 import React from "react"
-import AccountPayableTableComponent from "../../account-payable/account-payable-table"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+import AccountPayableTableComponent from "./account-payable-table"
 
 type Props = {}
 

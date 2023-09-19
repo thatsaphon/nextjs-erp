@@ -97,7 +97,6 @@ const SearchARInput = ({ type = "text", label, name }: Props) => {
               }}
             />
             <MagnifyingGlassIcon className="absolute left-1 top-1 h-6 w-6" />
-            {/* <div className="">MagnifyingGlassIcon</div> */}
           </div>
           {arList.map((ar, index) => (
             <Fragment key={index}>

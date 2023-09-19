@@ -1,16 +1,16 @@
-import React from "react";
-import AccountPayableFormComponent from "../account-payable-form";
-import Link from "next/link";
-import { editAccountPayable } from "./action";
-import { prisma } from "@/lib/prisma";
+import React from "react"
+import AccountPayableFormComponent from "../../(root)/account-payable/account-payable-form"
+import Link from "next/link"
+import { editAccountPayable } from "./action"
+import { prisma } from "@/lib/prisma"
 
-type Props = { params: { id: number } };
+type Props = { params: { id: number } }
 
 export default async function AccountPayableDetailPage({ params }: Props) {
   const ap = await prisma.accountPayable.findFirst({
     where: { id: +params.id },
-  });
-  if (!ap) return <>Not Found</>;
+  })
+  if (!ap) return <>Not Found</>
   return (
     <>
       <div className="mx-auto mt-4 flex w-full max-w-6xl justify-end">
@@ -20,11 +20,11 @@ export default async function AccountPayableDetailPage({ params }: Props) {
         <AccountPayableFormComponent
           ap={ap}
           submit={async (data) => {
-            "use server";
-            await editAccountPayable(data, params.id);
+            "use server"
+            await editAccountPayable(data, params.id)
           }}
         />
       </div>
     </>
-  );
+  )
 }

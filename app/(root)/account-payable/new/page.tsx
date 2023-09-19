@@ -1,9 +1,9 @@
-import Link from "next/link";
-import React from "react";
-import AccountPayableFormComponent from "../account-payable-form";
-import { createAccountPayable } from "./action";
+import Link from "next/link"
+import React from "react"
+import AccountPayableFormComponent from "../../(root)/account-payable/account-payable-form"
+import { createAccountPayable } from "./action"
 
-type Props = {};
+type Props = {}
 
 export default function NewAccountPayablePage({}: Props) {
   return (
@@ -14,11 +14,11 @@ export default function NewAccountPayablePage({}: Props) {
       <div className="m-2 mx-auto min-h-[500px] w-full max-w-4xl rounded-lg bg-slate-200 p-3">
         <AccountPayableFormComponent
           submit={async (data) => {
-            "use server";
-            await createAccountPayable(data);
+            "use server"
+            await createAccountPayable(data)
           }}
         />
       </div>
     </>
-  );
+  )
 }

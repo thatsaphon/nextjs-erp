@@ -1,16 +1,16 @@
-import React from "react";
-import AccountReceivableFormComponent from "../account-receivable-form";
-import Link from "next/link";
-import { editAccountReceivable } from "./action";
-import { prisma } from "@/lib/prisma";
+import React from "react"
+import AccountReceivableFormComponent from "../../(root)/account-receivable/account-receivable-form"
+import Link from "next/link"
+import { editAccountReceivable } from "./action"
+import { prisma } from "@/lib/prisma"
 
-type Props = { params: { id: number } };
+type Props = { params: { id: number } }
 
 export default async function AccountReceivableDetailPage({ params }: Props) {
   const ar = await prisma.accountReceivable.findFirst({
     where: { id: +params.id },
-  });
-  if (!ar) return <>Not Found</>;
+  })
+  if (!ar) return <>Not Found</>
   return (
     <>
       <div className="mx-auto mt-4 flex w-full max-w-6xl justify-end">
@@ -20,11 +20,11 @@ export default async function AccountReceivableDetailPage({ params }: Props) {
         <AccountReceivableFormComponent
           ar={ar}
           submit={async (data) => {
-            "use server";
-            await editAccountReceivable(data, params.id);
+            "use server"
+            await editAccountReceivable(data, params.id)
           }}
         />
       </div>
     </>
-  );
+  )
 }

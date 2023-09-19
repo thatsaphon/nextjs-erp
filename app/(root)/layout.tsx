@@ -1,5 +1,5 @@
 import Link from "next/link"
-import "./globals.css"
+import "../globals.css"
 import { Noto_Sans_Thai } from "next/font/google"
 import SideNavMainComponent from "@/components/side-nav/side-nav-server"
 
@@ -50,9 +50,6 @@ export default function RootLayout({
           </div>
         </header>
         <div className="flex h-full w-full">
-          <div className="h-full w-48 bg-slate-200 p-2">
-            <SideNavMainComponent />
-          </div>
           <div className="w-full">{children}</div>
         </div>
       </body>

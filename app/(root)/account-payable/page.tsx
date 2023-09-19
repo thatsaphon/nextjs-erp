@@ -1,13 +1,13 @@
-import React from "react";
-import AccountPayableTableComponent from "./account-payable-table";
-import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import React from "react"
+import AccountPayableTableComponent from "../../account-payable/account-payable-table"
+import Link from "next/link"
+import { prisma } from "@/lib/prisma"
 
-type Props = {};
+type Props = {}
 
-export const revalidate = 3600;
+export const revalidate = 3600
 export default async function AccountPayablePage({}: Props) {
-  const ap = await prisma.accountPayable.findMany({});
+  const ap = await prisma.accountPayable.findMany({})
   return (
     <>
       <div className="p-4">
@@ -21,5 +21,5 @@ export default async function AccountPayablePage({}: Props) {
         <AccountPayableTableComponent ap={ap} />
       </div>
     </>
-  );
+  )
 }

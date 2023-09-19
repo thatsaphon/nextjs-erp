@@ -1,14 +1,14 @@
-import { prisma } from "@/lib/prisma";
-import Link from "next/link";
-import React from "react";
-import SalesFormComponent from "../sales-form";
-import { createNewSales } from "./action";
+import { prisma } from "@/lib/prisma"
+import Link from "next/link"
+import React from "react"
+import SalesFormComponent from "../../../sales/sales-form"
+import { createNewSales } from "./action"
 
-type Props = {};
+type Props = {}
 
 export default async function NewSalesPage({}: Props) {
-  const ars = await prisma.accountReceivable.findMany({});
-  if (!ars) return <>Not Found</>;
+  const ars = await prisma.accountReceivable.findMany({})
+  if (!ars) return <>Not Found</>
   return (
     <>
       <div className="mx-auto mt-4 flex w-full max-w-6xl justify-end">
@@ -23,10 +23,10 @@ export default async function NewSalesPage({}: Props) {
           ars={ars}
           sales={[]}
           submit={async (data, transactionItem, ar) => {
-            "use server";
-            await createNewSales(data, transactionItem, ar);
+            "use server"
+            await createNewSales(data, transactionItem, ar)
           }}></SalesFormComponent>
       </div>
     </>
-  );
+  )
 }

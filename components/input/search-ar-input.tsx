@@ -9,10 +9,13 @@ import React, {
 import * as Dialog from "@radix-ui/react-dialog";
 import { Cross2Icon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import InputComponent from "./input-component";
-import { useDebounce, useDebouncedCallback } from "use-debounce";
+import { useDebouncedCallback } from "use-debounce";
 import { AccountReceivable } from "@prisma/client";
 import SearchARDialog from "../dialog/search-ar-dialog";
 import SearchARFromDBDDialog from "../dialog/search-from-dbd-dialog";
+import { Company } from "@/api/searchFromVAT";
+import CreateARDialog from "../dialog/create-ar-dialog";
+import { searchAR, searchARByTaxID } from "@/api/arController/arController";
 
 type Props = {
   type?: string;
@@ -28,20 +31,25 @@ const SearchARInput = ({ type = "text", label, name }: Props) => {
   const [open, setOpen] = useState(false);
   const [arList, setArList] = useState<AccountReceivable[]>([]);
   const [error, setError] = useState("");
-  const [isFocus, SetIsFocus] = useState(false);
+  const [isFocus, setIsFocus] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | undefined>();
   const debouncedSearch = useDebouncedCallback(async (value) => {
-    if (value.length > 3) searchAr(value);
+    fetchAr(value);
   }, 500);
 
   const debounceBlur = useDebouncedCallback(async () => {
-    SetIsFocus(false);
+    setIsFocus(false);
   }, 500);
 
-  const searchAr = async (value: string) => {
-    const res = await fetch(`/api/ar/${value}`, {
-      next: { revalidate: 3600, tags: ["ar", value] },
-    });
-    setArList(await res.json());
+  const fetchAr = async (value: string) => {
+    if (!value) {
+      const ars = await searchAR({});
+      setArList(ars);
+    }
+    if (value) {
+      const ars = await searchAR({ name: value });
+      setArList(ars);
+    }
   };
 
   const onOpen = (open: boolean) => {
@@ -51,6 +59,27 @@ const SearchARInput = ({ type = "text", label, name }: Props) => {
   const onSelectAR = (ar: AccountReceivable) => {
     setValue(`${ar.name}`);
     setError("");
+  };
+
+  const onSelectCompany = async (company: Company) => {
+    setOpen(false);
+    setSelectedCompany(company);
+    const isExist = await searchARByTaxID(company.IDs13);
+    if (!isExist) {
+      setDialogType("create-ar");
+      setOpen(true);
+    }
+  };
+
+  const onCreateNewAr = () => {
+    setSelectedCompany(undefined);
+    setDialogType("create-ar");
+    setOpen(true);
+  };
+
+  const onConfirmCreateAr = async (ar: AccountReceivable) => {
+    // const ar = await fetch(`/api/ar`);
+    setOpen(false);
   };
 
   const onBlur = async (arInput: string) => {
@@ -73,7 +102,6 @@ const SearchARInput = ({ type = "text", label, name }: Props) => {
   }
 
   async function onClickSearchFromDBD() {
-    console.log("click");
     setDialogType("search-from-dbd");
     onOpen(true);
   }
@@ -97,7 +125,7 @@ const SearchARInput = ({ type = "text", label, name }: Props) => {
             name={name}
             className="mt-1 w-full rounded-md p-3"
             type={type}
-            onFocus={() => SetIsFocus(true)}
+            onFocus={() => setIsFocus(true)}
           />
           <div className={`absolute top-full w-full ${!isFocus && "hidden"}`}>
             <div className="z-1 mt-1 w-full rounded-md border-2 border-black bg-white">
@@ -112,7 +140,10 @@ const SearchARInput = ({ type = "text", label, name }: Props) => {
               {arList.length !== 0 && (
                 <p className="border-b-2 border-slate-300"></p>
               )}
-              <p className="cursor-pointer p-2 hover:bg-cyan-100">
+              <p
+                onClick={onCreateNewAr}
+                className="cursor-pointer p-2 hover:bg-cyan-100"
+              >
                 <button type="button">สร้างลูกค้าใหม่</button>
               </p>
               <p
@@ -127,8 +158,18 @@ const SearchARInput = ({ type = "text", label, name }: Props) => {
         {/* {error && <p className="text-red-600">{error}</p>}
         {!error && <p></p>} */}
       </label>
-      {dialogType === "search-ar" && <SearchARDialog onSelectAR={onSelectAR} />}
-      {dialogType === "search-from-dbd" && <SearchARFromDBDDialog />}
+      {dialogType === "search-ar" && (
+        <SearchARDialog onSelectAR={onSelectAR} open={open} />
+      )}
+      {dialogType === "search-from-dbd" && (
+        <SearchARFromDBDDialog onSelectCompany={onSelectCompany} />
+      )}
+      {dialogType === "create-ar" && (
+        <CreateARDialog
+          onConfirm={onConfirmCreateAr}
+          selectedCompany={selectedCompany}
+        />
+      )}
       {/* <Dialog.Portal>
         <Dialog.Overlay className="bg-blackA9 data-[state=open]:animate-overlayShow fixed inset-0" />
         <Dialog.Content className="data-[state=open]:animate-contentShow fixed left-[50%] top-[50%] max-h-[85vh] w-[90vw] max-w-[450px] translate-x-[-50%] translate-y-[-50%] rounded-[6px] bg-white p-[25px] shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] focus:outline-none">

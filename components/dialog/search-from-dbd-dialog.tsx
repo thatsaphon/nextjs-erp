@@ -1,31 +1,21 @@
 "use client";
 
-import { AccountReceivable } from "@prisma/client";
 import * as Dialog from "@radix-ui/react-dialog";
 import { MagnifyingGlassIcon, Cross2Icon } from "@radix-ui/react-icons";
 import React, { Fragment, useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { searchFromDBD } from "@/api/searchFromDBD";
-import { getFromDBDLink } from "@/api/getFromDBDLink";
 import { Company, searchFromVat } from "@/api/searchFromVAT";
 
-type Props = {};
+type Props = {
+  onSelectCompany: (company: Company) => void;
+};
 
-export default function SearchARFromDBDDialog({}: Props) {
+export default function SearchARFromDBDDialog({ onSelectCompany }: Props) {
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [fetchData, setFetchData] = useState<string>("");
 
   const fetchSearch = async (value: string) => {
     const res = await searchFromVat(value);
-    // const data = await res.text()
     setCompanies(res);
-  };
-  //   useEffect(() => {
-  //     fetchSearch("");
-  //   }, []);
-
-  const onSelectCompany = async (link: string) => {
-    const res = await getFromDBDLink(link);
   };
 
   const debounced = useDebouncedCallback(async (value) => {
@@ -54,7 +44,10 @@ export default function SearchARFromDBDDialog({}: Props) {
             {companies.map((company, index) => (
               <Fragment key={index}>
                 <Dialog.Close asChild>
-                  <button className="grid w-full grid-cols-2 gap-2 rounded-md border-b-2 pl-8 text-left hover:cursor-pointer hover:bg-slate-200">
+                  <button
+                    onClick={() => onSelectCompany(company)}
+                    className="grid w-full grid-cols-2 gap-2 rounded-md border-b-2 pl-8 text-left hover:cursor-pointer hover:bg-slate-200"
+                  >
                     <div className="p-2">{company.Id13}</div>
                     <div className="p-2">
                       {company.titleName} {company.Name}

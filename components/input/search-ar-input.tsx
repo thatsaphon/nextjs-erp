@@ -15,7 +15,12 @@ import SearchARDialog from "../dialog/search-ar-dialog";
 import SearchARFromDBDDialog from "../dialog/search-from-dbd-dialog";
 import { Company } from "@/api/searchFromVAT";
 import CreateARDialog from "../dialog/create-ar-dialog";
-import { searchAR, searchARByTaxID } from "@/api/arController/arController";
+import {
+  CreateAR,
+  createAR,
+  searchAR,
+  searchARByTaxID,
+} from "@/api/arController/arController";
 
 type Props = {
   type?: string;
@@ -33,11 +38,22 @@ const SearchARInput = ({ type = "text", label, name }: Props) => {
   const [error, setError] = useState("");
   const [isFocus, setIsFocus] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | undefined>();
-  const debouncedSearch = useDebouncedCallback(async (value) => {
-    fetchAr(value);
-  }, 500);
+  const debouncedSearch = useDebouncedCallback(
+    async (value) => {
+      fetchAr(value);
+    },
+    1000
+    // { leading: true }
+  );
 
   const debounceBlur = useDebouncedCallback(async () => {
+    if (
+      document.getElementById("drop-down") &&
+      document.getElementById("drop-down")?.contains(document.activeElement)
+    ) {
+      debounceBlur();
+      return;
+    }
     setIsFocus(false);
   }, 500);
 
@@ -56,12 +72,18 @@ const SearchARInput = ({ type = "text", label, name }: Props) => {
     setOpen(open);
   };
 
-  const onSelectAR = (ar: AccountReceivable) => {
+  const onSelectARFromDropDown = (ar: AccountReceivable) => {
+    setValue(ar.name);
+    document.getElementsByName("date")[0]?.focus();
+  };
+
+  const onSelectARFromDialog = (ar: AccountReceivable) => {
     setValue(`${ar.name}`);
+    document.getElementsByName("date")[0]?.focus();
     setError("");
   };
 
-  const onSelectCompany = async (company: Company) => {
+  const onSelectCompanyFromDialog = async (company: Company) => {
     setOpen(false);
     setSelectedCompany(company);
     const isExist = await searchARByTaxID(company.IDs13);
@@ -77,9 +99,10 @@ const SearchARInput = ({ type = "text", label, name }: Props) => {
     setOpen(true);
   };
 
-  const onConfirmCreateAr = async (ar: AccountReceivable) => {
-    // const ar = await fetch(`/api/ar`);
+  const onConfirmCreateAr = async (ar: CreateAR) => {
     setOpen(false);
+    const result = await createAR(ar);
+    setValue(result.name);
   };
 
   const onBlur = async (arInput: string) => {
@@ -115,7 +138,6 @@ const SearchARInput = ({ type = "text", label, name }: Props) => {
             onKeyDown={handleSearchKeyDown}
             onBlur={(e) => {
               debounceBlur();
-              onBlur(e.target.value);
             }}
             value={value}
             onChange={(e) => {
@@ -127,14 +149,25 @@ const SearchARInput = ({ type = "text", label, name }: Props) => {
             type={type}
             onFocus={() => setIsFocus(true)}
           />
-          <div className={`absolute top-full w-full ${!isFocus && "hidden"}`}>
+          <div
+            id="drop-down"
+            className={`absolute top-full w-full ${!isFocus && "hidden"}`}
+          >
             <div className="z-1 mt-1 w-full rounded-md border-2 border-black bg-white">
               {arList.map((ar, index) => (
                 <p
                   key={index}
-                  className="cursor-pointer rounded-md p-2 hover:bg-cyan-100"
+                  className="cursor-pointer rounded-md hover:bg-cyan-100"
+                  onClick={() => onSelectARFromDropDown(ar)}
                 >
-                  <button>{ar.name}</button>
+                  <button
+                    type="button"
+                    className="w-full p-2 text-left focus:bg-slate-200 focus:outline-none"
+                    onFocusCapture={debounceBlur}
+                    onBlur={() => debounceBlur()}
+                  >
+                    {ar.name}
+                  </button>
                 </p>
               ))}
               {arList.length !== 0 && (
@@ -142,15 +175,25 @@ const SearchARInput = ({ type = "text", label, name }: Props) => {
               )}
               <p
                 onClick={onCreateNewAr}
-                className="cursor-pointer p-2 hover:bg-cyan-100"
+                className="cursor-pointer hover:bg-cyan-100"
               >
-                <button type="button">สร้างลูกค้าใหม่</button>
+                <button
+                  className="w-full p-2 text-left focus:bg-slate-200 focus:outline-none"
+                  type="button"
+                >
+                  สร้างลูกค้าใหม่
+                </button>
               </p>
               <p
-                className="cursor-pointer rounded-bl-md p-2 hover:bg-cyan-100"
+                className="cursor-pointer rounded-bl-md hover:bg-cyan-100"
                 onClick={onClickSearchFromDBD}
               >
-                <button type="button">ค้นหาจากกรมพัฒนาธุรกิจการค้า</button>
+                <button
+                  className="w-full p-2 text-left focus:bg-slate-200 focus:outline-none"
+                  type="button"
+                >
+                  ค้นหาจากกรมพัฒนาธุรกิจการค้า
+                </button>
               </p>
             </div>
           </div>
@@ -159,10 +202,10 @@ const SearchARInput = ({ type = "text", label, name }: Props) => {
         {!error && <p></p>} */}
       </label>
       {dialogType === "search-ar" && (
-        <SearchARDialog onSelectAR={onSelectAR} open={open} />
+        <SearchARDialog onSelectAR={onSelectARFromDialog} open={open} />
       )}
       {dialogType === "search-from-dbd" && (
-        <SearchARFromDBDDialog onSelectCompany={onSelectCompany} />
+        <SearchARFromDBDDialog onSelectCompany={onSelectCompanyFromDialog} />
       )}
       {dialogType === "create-ar" && (
         <CreateARDialog

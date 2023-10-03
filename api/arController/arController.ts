@@ -37,3 +37,13 @@ export const searchAR = ({
 export const searchARByTaxID = (taxId: string) => {
   return prisma.accountReceivable.findFirst({ where: { taxId } });
 };
+
+export type CreateAR = Omit<
+  AccountReceivable,
+  "id" | "createdDate" | "updatedDate"
+>;
+export const createAR = (ar: CreateAR) => {
+  return prisma.accountReceivable.create({
+    data: { ...ar, createdDate: new Date(), updatedDate: new Date() },
+  });
+};

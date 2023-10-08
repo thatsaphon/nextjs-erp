@@ -26,6 +26,7 @@ export default function SalesItemsComponent({ salesItems = [] }: Props) {
         [document.getElementsByName("quantity").length - 1]?.focus();
     }
   }, [salesItemsInput.length]);
+
   const setInventoryPricesToList = (
     inventoryPrices: InventoryPartialWithRelations,
     barcode: string
@@ -35,7 +36,7 @@ export default function SalesItemsComponent({ salesItems = [] }: Props) {
       (price) => price.barcode === barcode
     );
     if (index === -1) index = 0;
-    const newList = {
+    const newList: TransactionItemPartialWithRelations = {
       type: "Inventory",
       inventory: inventoryPrices,
       quantity: inventoryPrices.prices[index].quantity,
@@ -44,6 +45,7 @@ export default function SalesItemsComponent({ salesItems = [] }: Props) {
       inventoryUnit: inventoryPrices.prices[index].unit,
       inventoryUnitQuantity: inventoryPrices.prices[index].quantity,
       inventoryBarcode: inventoryPrices.prices[index].barcode,
+      inventoryId: inventoryPrices.id,
     };
     return newList;
   };

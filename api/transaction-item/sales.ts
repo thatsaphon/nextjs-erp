@@ -31,7 +31,6 @@ export const createSales = async (formData: FormData) => {
     unitQuantities,
     prices,
   });
-
   const transaction: TransactionCreateInput = {
     date: new Date(date),
     documentNumber: await generateSalesInvoice("SO", date),

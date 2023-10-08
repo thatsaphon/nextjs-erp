@@ -62,6 +62,9 @@ export default async function EditSalesPage({
             </label>
           </div>
           <SalesItemsComponent salesItems={salesItemOnly} />
+          <Link href={`${documentNumber}/download`}>
+            <button>Print</button>
+          </Link>
         </form>
       </div>
     </>

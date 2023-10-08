@@ -1,19 +1,24 @@
 "use client";
 
-import { Inventory, Price } from "@prisma/client";
+import {
+  searchInventory,
+  searchInventoryByCode,
+} from "@/api/inventory/inventoryController";
+import { InventoryPartialWithRelations } from "@/prisma/generated/zod";
 import * as Dialog from "@radix-ui/react-dialog";
 import { MagnifyingGlassIcon, Cross2Icon } from "@radix-ui/react-icons";
-import error from "next/error";
-import { type } from "os";
 import React, { Fragment, useState, KeyboardEvent } from "react";
 import { useDebouncedCallback } from "use-debounce";
+import { z } from "zod";
 
-type InventoryPrices = Inventory & { prices: Price[] };
 type Props = {
   type?: string;
   label?: string;
   name?: string;
-  inventorySelected: (inventory: InventoryPrices) => void;
+  inventorySelected: (
+    inventory: InventoryPartialWithRelations,
+    barcode?: string
+  ) => void;
 };
 
 export default function SearchInventoryInput({
@@ -24,41 +29,37 @@ export default function SearchInventoryInput({
 }: Props) {
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
-  const [inventoryList, setInventoryList] = useState<InventoryPrices[]>([]);
+  const [inventoryList, setInventoryList] = useState<
+    InventoryPartialWithRelations[]
+  >([]);
   const [error, setError] = useState("");
   const debounced = useDebouncedCallback(async (value) => {
-    searchInventory(value);
+    try {
+      const inventories = await searchInventory(value);
+      setInventoryList(inventories);
+    } catch (err) {
+      console.log(err);
+    }
   }, 500);
-
-  const searchInventory = async (value: string) => {
-    const res = await fetch(`/api/inventory/search/${value}`, {
-      next: { revalidate: 3600, tags: ["ar", value] },
-    });
-    setInventoryList(await res.json());
-  };
 
   const onOpen = (open: boolean) => {
     setOpen(open);
     // searchInventory("");
   };
 
-  const onSelectInventory = (inventory: InventoryPrices) => {
-    setValue(`${inventory.name}`);
+  const onSelectInventory = (inventory: InventoryPartialWithRelations) => {
+    setValue("");
     setError("");
     inventorySelected(inventory);
   };
 
-  const onBlur = async (arInput: string) => {
-    if (!arInput) return setError("จำเป็นต้องเลือกลูกค้า");
-
-    // const res = await fetch(`/api/ar/${arInput}`, {
-    //   next: { revalidate: 3600, tags: ["ar", arInput] },
-    // });
-    // const ars = await res.json();
-    // if (!ars.length) return setError("ไม่พบลูกค้า");
-
-    // setValue(ars[0].name);
-    // setError("");
+  const onBlur = async (barcode: string) => {
+    if (!barcode) return setError("จำเป็นต้องเลือกสินค้า");
+    const inventory = await searchInventoryByCode(barcode);
+    if (!inventory) return setError("หาสินค้าไม่พบ");
+    setValue("");
+    setError("");
+    inventorySelected(inventory, barcode);
   };
 
   async function handleSearchKeyDown(e: KeyboardEvent<HTMLInputElement>) {
@@ -70,7 +71,7 @@ export default function SearchInventoryInput({
 
   return (
     <Dialog.Root open={open} onOpenChange={(open) => onOpen(open)}>
-      <label htmlFor={name}>
+      <label htmlFor={name} className="relative">
         {label}
         <div>
           <input
@@ -79,19 +80,17 @@ export default function SearchInventoryInput({
             value={value}
             onChange={(e) => setValue(e.target.value)}
             name={name}
-            className="rounded-md p-2"
+            className="w-full rounded-md p-2"
             type={type}
           />
         </div>
-        {error && <p className="text-red-600">{error}</p>}
+        {error && <p className="absolute top-full text-red-600">{error}</p>}
       </label>
-      {/* <Dialog.Trigger asChild>
-      </Dialog.Trigger> */}
       <Dialog.Portal>
         <Dialog.Overlay className="bg-blackA9 data-[state=open]:animate-overlayShow fixed inset-0" />
         <Dialog.Content className="data-[state=open]:animate-contentShow fixed left-[50%] top-[50%] max-h-[85vh] w-[90vw] max-w-[450px] translate-x-[-50%] translate-y-[-50%] rounded-[6px] bg-white p-[25px] shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] focus:outline-none">
           <Dialog.Title className="text-mauve12 m-0 text-[17px] font-medium">
-            ค้นหาลูกหนี้
+            ค้นหาสินค้า
           </Dialog.Title>
           <Dialog.Description className="text-mauve11 mb-5 mt-[10px] text-[15px] leading-normal"></Dialog.Description>
           <div className="relative">

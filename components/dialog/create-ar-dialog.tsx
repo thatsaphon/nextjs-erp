@@ -1,6 +1,6 @@
 "use client";
 
-import { CreateAR, createAR, searchAR } from "@/api/arController/arController";
+import { CreateAR, createAR, searchAR } from "@/api/ar/arController";
 import { Company } from "@/api/searchFromVAT";
 import { AccountReceivable } from "@prisma/client";
 import * as Dialog from "@radix-ui/react-dialog";

@@ -1,20 +1,20 @@
-import Link from "next/link"
-import React, { Suspense } from "react"
-import { prisma } from "@/lib/prisma"
-import SalesTableComponent from "./sale-table"
-import dayjs from "dayjs"
-import SalesListLoading from "./loading"
+import Link from "next/link";
+import React, { Suspense } from "react";
+import { prisma } from "@/lib/prisma";
+import SalesTableComponent from "./sale-table";
+import dayjs from "dayjs";
+import SalesListLoading from "./loading";
 
 type Props = {
-  params: { slug: string }
-  searchParams: { [key: string]: string | string[] | undefined }
-}
+  params: { slug: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+};
 
-export const revalidate = 3600
+export const revalidate = 3600;
 export default async function SalesListPage({ params, searchParams }: Props) {
-  let month = dayjs()
+  let month = dayjs();
   if (searchParams.month && searchParams.year) {
-    month = dayjs(searchParams.month + "20" + searchParams.year)
+    month = dayjs(searchParams.month + "20" + searchParams.year);
   }
 
   const salesList = await prisma.transaction.findMany({
@@ -30,7 +30,8 @@ export default async function SalesListPage({ params, searchParams }: Props) {
         include: { accountReceivable: {}, inventory: {} },
       },
     },
-  })
+    orderBy: [{ date: "asc" }, { documentNumber: "asc" }],
+  });
 
   return (
     <>
@@ -47,5 +48,5 @@ export default async function SalesListPage({ params, searchParams }: Props) {
         </Suspense>
       </div>
     </>
-  )
+  );
 }

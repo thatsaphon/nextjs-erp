@@ -7,6 +7,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator zod {
+  provider                  = "zod-prisma-types"
+  createRelationValuesTypes = true
+  createPartialTypes        = true
+}
+
 datasource db {
   provider          = "postgresql"
   url               = env("POSTGRES_PRISMA_URL") // uses connection pooling
@@ -18,11 +24,11 @@ model Inventory {
   id               Int               @id @default(autoincrement())
   code             String            @unique
   name             String            @unique
-  prices           Price[]
-  costs            Cost[]
-  transactionItems TransactionItem[]
-  categories       ProductCategory[]
-  images           Image[]
+  prices           Price[] ///zod.nullable()
+  costs            Cost[] ///zod.nullable()
+  transactionItems TransactionItem[] ///zod.nullable()
+  categories       ProductCategory[] ///zod.nullable()
+  images           Image[] ///zod.nullable()
   remark           String?
   price            Float             @default(0)
   quantity         Float             @default(0)
@@ -33,7 +39,7 @@ model Inventory {
 model ProductCategory {
   id           String      @id @default(cuid())
   name         String      @unique
-  inventoryIds Inventory[]
+  inventoryIds Inventory[] ///zod.nullable()
 }
 
 model Price {
@@ -70,9 +76,9 @@ model Transaction {
   id               String            @id @default(cuid())
   date             DateTime
   documentNumber   String            @unique
-  transactionItems TransactionItem[]
+  transactionItems TransactionItem[] ///zod.nullable()
   type             TransactionType
-  images           Image[]
+  images           Image[] ///zod.nullable()
   remark           String
 }
 
@@ -116,8 +122,8 @@ model TransactionItem {
 
 model AccountPayable {
   id           Int               @id @default(autoincrement())
-  transactions TransactionItem[]
-  images       Image[]
+  transactions TransactionItem[] ///zod.nullable()
+  images       Image[] ///zod.nullable()
   name         String
   address      String?
   phone        String?
@@ -129,8 +135,8 @@ model AccountPayable {
 
 model AccountReceivable {
   id           Int               @id @default(autoincrement())
-  transactions TransactionItem[]
-  images       Image[]
+  transactions TransactionItem[] ///zod.nullable()
+  images       Image[] ///zod.nullable()
   name         String
   address      String?
   phone        String?
@@ -142,8 +148,8 @@ model AccountReceivable {
 
 model Cash {
   id           Int               @id @default(autoincrement())
-  transactions TransactionItem[]
-  images       Image[]
+  transactions TransactionItem[] ///zod.nullable()
+  images       Image[] ///zod.nullable()
   name         String
   accountId    String
   createdDate  DateTime

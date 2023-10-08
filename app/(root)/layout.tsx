@@ -18,7 +18,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const user: User | null = await currentUser();
-  // if (!user?.privateMetadata.role) return <Unauthorized></Unauthorized>
   return (
     <ClerkProvider>
       <html lang="en">

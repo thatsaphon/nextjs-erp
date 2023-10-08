@@ -1,6 +1,7 @@
 "use client";
 
 import { searchAR } from "@/api/ar/arController";
+import { InventoryPartialWithRelations } from "@/prisma/generated/zod";
 import { AccountReceivable } from "@prisma/client";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Cross2Icon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
@@ -8,21 +9,26 @@ import React, { Fragment, useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 type Props = {
-  onSelectAR: (ar: AccountReceivable) => void;
+  onSelectInventory: (inventorySelect: InventoryPartialWithRelations) => void;
   open: boolean;
 };
 
-export default function SearchARDialog({ onSelectAR, open = false }: Props) {
-  const [arList, setArList] = useState<AccountReceivable[]>([]);
+export default function SearchInventoryDialog({
+  onSelectInventory,
+  open = false,
+}: Props) {
+  const [inventories, setInventories] = useState<
+    InventoryPartialWithRelations[]
+  >([]);
 
   const fetchAr = async (value: string) => {
     if (!value) {
       const ars = await searchAR({});
-      setArList(ars);
+      setInventories(ars);
     }
     if (value) {
       const ars = await searchAR({ name: value });
-      setArList(ars);
+      setInventories(ars);
     }
   };
 
@@ -54,12 +60,12 @@ export default function SearchARDialog({ onSelectAR, open = false }: Props) {
           />
           <MagnifyingGlassIcon className="absolute left-1 top-1 h-6 w-6" />
         </div>
-        {arList.map((ar, index) => (
+        {inventories.map((ar, index) => (
           <Fragment key={index}>
             <Dialog.Close asChild>
               <button
                 className="grid w-full grid-cols-2 gap-1 rounded-md border-b-2 pl-8 text-left hover:cursor-pointer hover:bg-slate-200"
-                onClick={() => onSelectAR(ar)}
+                onClick={() => onSelectInventory(ar)}
               >
                 <div className="p-2">{ar.name}</div>
                 <div className="p-2">{ar.remark}</div>
